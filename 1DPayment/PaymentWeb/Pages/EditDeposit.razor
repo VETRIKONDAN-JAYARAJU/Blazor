@@ -1,0 +1,428 @@
+﻿@page "/editdeposit/{DepositId:int}/{PaymentTypeId:int}/{BankId:int}/{BankAccountId:int}";
+
+<PageTitle>Edit Deposit Information</PageTitle>
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject DepositService depositService;
+@inject MerchantService merchantService;
+@inject PaymentMethodService paymentMethodService;
+@inject BankService bankService;
+@inject BankAccountService bankAccountService;
+@inject CurrencyService currencyService;
+@inject EWalletService ewalletService;
+@inject QRCodeService qrcodeService;
+@inject PaymentStatusService paymentStatusService;
+@inject FeeBindService feeBindService;
+@inject CommissionService commissionService;
+
+@inject NotificationService Notification;
+@inject NavigationManager Navigation;
+
+<div class="container-fluid">
+    <RadzenTemplateForm TItem="Deposit" Data="@objDeposit" Submit=@OnFormSubmit>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Edit Deposit Information</h4>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Merchant / Agent *" />
+                                    <RadzenDropDown Name="MerchantName" Data=@listMerchant Placeholder="-- Choose --" TextProperty="MerchantName" ValueProperty="MerchantId" @bind-Value="@((objDeposit.MerchantId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="MerchantName" Text="Select Merchant / Agent" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Correspondence Id *" />
+                                    <RadzenTextBox Name="MemberCorrespondenceId" @bind-Value=@objDeposit.MemberCorrespondenceId MaxLength="20" class="form-control" />
+                                    <RadzenRequiredValidator Component="MemberCorrespondenceId" Text="Member Correspondence Id is required" />
+                                    <RadzenRegexValidator Component="MemberCorrespondenceId" Text="Member Correspondence Id must be Alphabets / Numbers" Pattern="[a-zA-Z0-9]*$" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Reference No" />
+                                    <RadzenTextBox Name="ReferenceNo" @bind-Value=@objDeposit.ReferenceNo MaxLength="250" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Payment Type *" />
+                                    <RadzenDropDown Name="PaymentType" Data=@listPaymentType Placeholder="-- Choose --" TextProperty="PaymentType" ValueProperty="PaymentTypeId" @bind-Value="@((objDeposit.PaymentTypeId))" class="form-control" Change="@PaymentTypeOnChange" />
+                                    <RadzenRequiredValidator Component="PaymentType" Text="Select Payment Type" DefaultValue="0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Bank *" />
+                                    <RadzenDropDown Name="BankName" Data=@listBank Placeholder="-- Choose --" TextProperty="BankName" ValueProperty="BankId" @bind-Value="@((objDeposit.BankId))" class="form-control" Change="@BankOnChange" />
+                                    <RadzenRequiredValidator Component="BankName" Text="Select Bank" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Account No *" />
+                                    <RadzenDropDown Name="AccountNo" Data=@listBankAccount Placeholder="-- Choose --" TextProperty="AccountNo" ValueProperty="BankAccountId" @bind-Value="@((objDeposit.BankAccountId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="AccountNo" Text="Select Account No" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Currency *" />
+                                    <RadzenDropDown Name="CurrencyName" Data=@listCurrency Placeholder="-- Choose --" TextProperty="CurrencyName" ValueProperty="CurrencyCode" @bind-Value="@((objDeposit.CurrencyCode))" class="form-control" />
+                                    <RadzenRequiredValidator Component="CurrencyName" Text="Select Currency" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Amount *" />
+                                    <RadzenNumeric Name="Amount" @bind-Value=@objDeposit.Amount Min="1" Max="999999" ShowUpDown="false" class="form-control" />
+                                    <RadzenRequiredValidator Component="Amount" Text="Amount is Required" />
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Actual Amount *" />
+                                    <RadzenNumeric Name="ActualAmount" @bind-Value=@objDeposit.ActualAmount Min="1" Max="999999" ShowUpDown="false" class="form-control" />
+                                    <RadzenRequiredValidator Component="ActualAmount" Text="Actual Amount is Required" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3" hidden="@ewalletShow">
+                                <div class="form-group">
+                                    <RadzenLabel Text="eWallet *" />
+                                    <RadzenDropDown Name="EWalletName" Data=@listEWallet TextProperty="EWalletName" ValueProperty="EWalletId" @bind-Value="@((objDeposit.EWalletId))" class="form-control" />
+                                    @*<RadzenRequiredValidator Component="EWalletName" Text="Select EWallet" DefaultValue="0" />*@
+                                </div>
+                            </div>
+
+
+
+                            <div class="col-md-3" hidden="@qrcodeShow">
+                                <div class="form-group">
+                                    <RadzenLabel Text="QR Code *" />
+                                    <RadzenDropDown Name="QRCodeName" Data=@listQRCode TextProperty="QRCodeName" ValueProperty="QRCodeId" @bind-Value="@((objDeposit.QRCodeId))" class="form-control" />
+                                    @*<RadzenRequiredValidator Component="QRCodeName" Text="Select QRCode" DefaultValue="0" />*@
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Status *" />
+                                    <RadzenDropDown Name="Status" Data="@listPaymentStatus" Placeholder="-- Choose --" TextProperty="Status" ValueProperty="StatusId" @bind-Value="@((objDeposit.StatusId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="Status" Text="Select Status" DefaultValue="0" />
+                                </div>
+                            </div>
+
+
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Submit" Text="Submit" Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Button" Text="Back to Previous" Icon="refresh" ButtonStyle="ButtonStyle.Warning" Click=@(args => OnClick()) />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </RadzenTemplateForm>
+</div>
+
+@code {
+    private bool ewalletShow { get; set; } = true;
+    private bool qrcodeShow { get; set; } = true;
+
+    [Parameter]
+    public int DepositId { get; set; }
+
+    [Parameter]
+    public int PaymentTypeId { get; set; }
+
+    [Parameter]
+    public int BankId { get; set; }
+
+    [Parameter]
+    public int BankAccountId { get; set; }
+
+    Deposit objDeposit = new();
+    Commission objCommission = new();
+
+    IEnumerable<Merchant>? listMerchant;
+    IEnumerable<PaymentMethod>? listPaymentType;
+    IEnumerable<Bank>? listBank;
+    IEnumerable<BankAccount>? listBankAccount;
+    IEnumerable<Currency>? listCurrency;
+    IEnumerable<EWallet>? listEWallet;
+    IEnumerable<QRCode>? listQRCode;
+    IEnumerable<PaymentStatus>? listPaymentStatus;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMerchant();
+        await LoadPaymentType();
+        await LoadBank();
+        await LoadBankAccountNo();
+        await LoadCurrency();
+        await LoadEWallet();
+        await LoadQRCode();
+        await LoadPaymentStatus();
+
+        switch (PaymentTypeId)
+        {
+            case 1:
+                ewalletShow = true;
+                qrcodeShow = true;
+                break;
+            case 2:
+                ewalletShow = true;
+                qrcodeShow = true;
+                break;
+            case 3:
+                ewalletShow = false;
+                qrcodeShow = true;
+                break;
+            case 4:
+                ewalletShow = true;
+                qrcodeShow = false;
+                break;
+        }
+
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var httpClientHandler = new HttpClientHandler();
+        httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+
+        using (var client = new HttpClient(httpClientHandler))
+        {
+            try
+            {
+              //   objDeposit = await client.GetFromJsonAsync<Deposit>("https://localhost:7245/api/deposit/get/" + DepositId);
+                objDeposit = await client.GetFromJsonAsync<Deposit>("http://164.68.109.104:8080/api/deposit/get/" + DepositId);
+
+                var user = (await AuthState!).User;
+                var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+                var userAccount = userService.GetbyUsername(userEmail);
+                objDeposit.UpdatedBy = userAccount.UserId;
+            }
+            catch (Exception ex)
+            {
+                Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+            }
+        }
+        await base.OnParametersSetAsync();
+    }
+
+    async Task OnFormSubmit()
+    {
+        var httpClientHandler = new HttpClientHandler();
+        httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+
+        using (var client = new HttpClient(httpClientHandler))
+        {
+            try
+            {
+               //  await client.PostAsJsonAsync("https://localhost:7245/api/deposit/update", objDeposit);
+                await client.PostAsJsonAsync("http://164.68.109.104:8080/api/deposit/update", objDeposit);
+
+                //  Check Commission already calculated or not in Commission Table
+                var isExists = commissionService.IsCommissionCalculate(objDeposit.MerchantId);
+
+                if (isExists == false)
+                {
+                    if (objDeposit.StatusId == 1)
+                    {
+                        await OnCommissionCalculate();
+                    }
+                }
+
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+                Navigation.NavigateTo("/viewdeposit");
+            }
+            catch (Exception ex)
+            {
+                Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+            }
+        }
+    }
+
+    async Task LoadMerchant()
+    {
+        listMerchant = await Task.Run(merchantService.SelectActive);
+    }
+
+    async Task LoadPaymentType()
+    {
+        listPaymentType = await Task.Run(paymentMethodService.SelectActive);
+    }
+
+    private void PaymentTypeOnChange(object value)
+    {
+        int PaymentTypeValue = Convert.ToInt32(value);
+
+        switch (PaymentTypeValue)
+        {
+            case 1:
+                ewalletShow = true;
+                qrcodeShow = true;
+                break;
+            case 2:
+                ewalletShow = true;
+                qrcodeShow = true;
+                break;
+            case 3:
+                ewalletShow = false;
+                qrcodeShow = true;
+                break;
+            case 4:
+                ewalletShow = true;
+                qrcodeShow = false;
+                break;
+        }
+    }
+
+    async Task LoadBank()
+    {
+        listBank = await Task.Run(bankService.SelectActive);
+    }
+
+    async Task LoadBankAccountNo()
+    {
+        listBankAccount = await Task.Run(() => bankAccountService.SelectBankAccountNo(BankId));
+    }
+
+    private void BankOnChange(object value)
+    {
+        objDeposit.BankAccountId = 0;
+        listBankAccount = bankAccountService.SelectBankAccountNo(Convert.ToInt32(value));
+    }
+
+    async Task LoadCurrency()
+    {
+        listCurrency = await Task.Run(currencyService.SelectActive);
+    }
+
+    async Task LoadQRCode()
+    {
+        listQRCode = await Task.Run(qrcodeService.SelectActive);
+    }
+
+    async Task LoadEWallet()
+    {
+        listEWallet = await Task.Run(ewalletService.SelectActive);
+    }
+
+    protected async Task LoadPaymentStatus()
+    {
+        listPaymentStatus = await Task.Run(paymentStatusService.SelectAll);
+    }
+
+    void OnClick()
+    {
+        Navigation.NavigateTo("/viewdeposit", false);
+    }
+
+
+    private async Task OnCommissionCalculate()
+    {
+        var merchantId = objDeposit.MerchantId;
+
+        //  Step 1 : Get Successfull Deposit (Transaction) Details using MerchantId
+        var depositDetails = depositService.GetSuccessDepositDetails(merchantId);
+        if (depositDetails.Count > 0)
+        {
+            objCommission.MerchantId = depositDetails[0].MerchantId;
+            objCommission.TransactionId = depositDetails[0].DepositId;
+            objCommission.TransactionValue = Convert.ToDecimal(depositDetails[0].Amount);
+            objCommission.CurrencyCode = depositDetails[0].CurrencyCode;
+            objCommission.TransactionDate = Convert.ToDateTime(depositDetails[0].CreatedOn);
+
+            //  Step 2 : Get FeeRate from Feebind using MerchantId
+            if (objCommission.MerchantId > 0 && objCommission.CurrencyCode != string.Empty)
+            {
+                var feeRate = feeBindService.GetFeeRate(objCommission.MerchantId, objCommission.CurrencyCode);
+
+                if (feeRate.Count > 0)
+                {
+                    //  Step 3 : Calculate Commission
+                    decimal amount = Convert.ToDecimal(feeRate[0].FeeRate);
+                    objCommission.CommissionEarn = amount * objCommission.TransactionValue;
+                    objCommission.CommissionEarn = objCommission.CommissionEarn / 100;
+
+                    //  Step 4 : Get Balance (Amount) from Merchant using MerchantId
+                    decimal merchantBalance = merchantService.GetBalanceAmount(merchantId);
+
+                    //  Step 5 : Calculation
+                    objCommission.NewBalance = objCommission.CommissionEarn + merchantBalance;
+
+                    //  Step 6 : Update New Balance Amount in Merchant Table using MerchantId
+                    merchantService.UpdateMerchantNewBalance(objCommission.MerchantId, objCommission.NewBalance, objCommission.CommissionEarn);
+
+                    //  Step 7 : Insert All the Details in Commission Table
+                    var result = await commissionService.Insert(objCommission);
+                    if (result == true)
+                    {
+                        Notification.Notify(NotificationSeverity.Success, summary: "Commission Calculated Successfully");
+                    }
+                    else
+                    {
+                        Notification.Notify(NotificationSeverity.Warning, summary: "Invalid Operation in Commission Calculation", duration: 10000);
+                    }
+
+                }
+                else
+                {
+                    Notification.Notify(NotificationSeverity.Error, summary: "Commission: Mismatch Currency Details between Deposit and Feebind", duration: 10000);
+                }
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "Invalid FeeBind Details");
+            }
+        }
+        else
+        {
+            Notification.Notify(NotificationSeverity.Warning, summary: "Invalid Merchant Details");
+        }
+
+    }
+}

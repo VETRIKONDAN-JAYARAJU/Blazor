@@ -1,0 +1,428 @@
+﻿@page "/feesreport"
+
+@inject ReportService reportService
+@inject NotificationService notificationService
+
+@inject IJSRuntime iJSRuntime
+
+@using IronXL;
+
+@using iTextSharp.text;
+@using iTextSharp.text.pdf;
+@using iTextSharp.text.html.simpleparser;
+
+@using PaymentWeb.Reports;
+
+<PageTitle>Feebinding Report</PageTitle>
+
+<div class="container-fluid">
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Feebinding Report</h4>
+                </div>
+
+                <div class="text-right pe-2">
+                    <RadzenButton Text="Export to Excel" ButtonStyle="ButtonStyle.Primary" Click="@ExportToExcel" />
+                    <RadzenButton Text="Export to Pdf" ButtonStyle="ButtonStyle.Secondary" Click="@ExportToPdf" />
+                </div>
+
+                <div class="card-body">
+                    <RadzenDataGrid TItem="FeeBind" Data="@modelData" Responsive="true" AllowPaging="true" PageSize="10" ColumnWidth="100%"
+                                    PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true" AllowSorting="false" AllowFiltering="false">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="FeeBind" Property="FeeBindId" Title="FEE BIND ID" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="MerchantName" Title="MERCHANT / AGENT NAME" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="PaymentType" Title="PAYMENT TYPE" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="CurrencyCode" Title="CURRENCY" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="FeeRate" Title="FEE RATE" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="FeeBindType" Title="FEEBIND TYPE" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="MinAmount" Title="MIN. AMOUNT" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="MaxAmount" Title="MAX. AMOUNT" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="LimitAmount" Title="DAILY LIMIT AMOUNT" />
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+@code {
+
+    IEnumerable<FeeBind>? modelData;
+
+    Document _pdfDocument = new();
+    PdfWriter? _pdfWriter;
+    PdfPCell _pdfCell = new();
+    Font _fontNormal = new();
+    Font _fontBold = new();
+    Font _fontTitle = new();
+    MemoryStream _memoryStream = new();
+
+    // Page OnInitialize ~~~~~
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataGrid();
+    }
+
+    // Load Data in DataGrid ~~~~~
+    protected async Task LoadDataGrid()
+    {
+        modelData = await Task.Run(reportService.FeeBindReport);
+        StateHasChanged();
+    }
+
+    // EXPORT TO EXCEL SECTION
+
+    private void ExportToExcel()
+    {
+        ExcelGenerate(iJSRuntime);
+    }
+
+    public void ExcelGenerate(IJSRuntime iJSRuntime)
+    {
+        byte[] fileContents;
+        WorkBook excelWorkbook = WorkBook.Create(ExcelFileFormat.XLSX);
+        excelWorkbook.Metadata.Author = "Dyn Edge";
+
+        // Add a blank WorkSheet
+        WorkSheet excelWorkSheet = excelWorkbook.CreateWorkSheet("Sheet1");
+
+        // Title Name
+        excelWorkSheet["A1"].Value = "Merchant Name";
+        excelWorkSheet["B1"].Value = "Payment Type";
+        excelWorkSheet["C1"].Value = "Currency";
+        excelWorkSheet["D1"].Value = "Fee Rate";
+        excelWorkSheet["E1"].Value = "Fee Bind Type";
+        excelWorkSheet["F1"].Value = "Min. Amount";
+        excelWorkSheet["G1"].Value = "Max. Amount";
+        excelWorkSheet["H1"].Value = "Daily Limit Amount";
+
+        // Apply Styles for Title Name
+        var titleRange = excelWorkSheet["A1:H1"];
+
+        foreach (var cell in titleRange)
+        {
+            titleRange.Style.Font.Height = 12;
+            titleRange.Style.Font.Bold = true;
+            titleRange.Style.SetBackgroundColor("#f1f1f1");
+            titleRange.Style.TopBorder.Type = IronXL.Styles.BorderType.Thin;
+            titleRange.Style.BottomBorder.Type = IronXL.Styles.BorderType.Thick;
+            titleRange.Style.LeftBorder.Type = IronXL.Styles.BorderType.Thin;
+            titleRange.Style.RightBorder.Type = IronXL.Styles.BorderType.Thin;
+            titleRange.Style.HorizontalAlignment = IronXL.Styles.HorizontalAlignment.Center;
+            titleRange.Style.VerticalAlignment = IronXL.Styles.VerticalAlignment.Center;
+        }
+
+        // Generate Data from Database
+        List<FeeBind> _oFeeBind = new List<FeeBind>();
+        _oFeeBind = reportService.FeeBindReport();
+
+        int Count = 2;
+
+        foreach (var item in _oFeeBind)
+        {
+            excelWorkSheet["A" + Count].Style.Font.Height = 12;
+            excelWorkSheet["A" + Count].Style.TopBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["A" + Count].Style.BottomBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["A" + Count].Style.LeftBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["A" + Count].Style.RightBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["A" + Count].Style.VerticalAlignment = IronXL.Styles.VerticalAlignment.Center;
+            excelWorkSheet["A" + Count].Value = item.MerchantName;
+
+            excelWorkSheet["B" + Count].Style.Font.Height = 12;
+            excelWorkSheet["B" + Count].Style.TopBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["B" + Count].Style.BottomBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["B" + Count].Style.LeftBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["B" + Count].Style.RightBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["B" + Count].Style.VerticalAlignment = IronXL.Styles.VerticalAlignment.Center;
+            excelWorkSheet["B" + Count].Value = item.PaymentType;
+
+            excelWorkSheet["C" + Count].Style.Font.Height = 12;
+            excelWorkSheet["C" + Count].Style.TopBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["C" + Count].Style.BottomBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["C" + Count].Style.LeftBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["C" + Count].Style.RightBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["C" + Count].Style.VerticalAlignment = IronXL.Styles.VerticalAlignment.Center;
+            excelWorkSheet["C" + Count].Value = item.CurrencyCode;
+
+            excelWorkSheet["D" + Count].Style.Font.Height = 12;
+            excelWorkSheet["D" + Count].Style.TopBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["D" + Count].Style.BottomBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["D" + Count].Style.LeftBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["D" + Count].Style.RightBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["D" + Count].Style.VerticalAlignment = IronXL.Styles.VerticalAlignment.Center;
+            excelWorkSheet["D" + Count].Value = item.FeeRate;
+
+            excelWorkSheet["E" + Count].Style.Font.Height = 12;
+            excelWorkSheet["E" + Count].Style.TopBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["E" + Count].Style.BottomBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["E" + Count].Style.LeftBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["E" + Count].Style.RightBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["E" + Count].Style.VerticalAlignment = IronXL.Styles.VerticalAlignment.Center;
+            excelWorkSheet["E" + Count].Value = item.FeeBindType;
+
+            excelWorkSheet["F" + Count].Style.Font.Height = 12;
+            excelWorkSheet["F" + Count].Style.TopBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["F" + Count].Style.BottomBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["F" + Count].Style.LeftBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["F" + Count].Style.RightBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["F" + Count].Style.VerticalAlignment = IronXL.Styles.VerticalAlignment.Center;
+            excelWorkSheet["F" + Count].Value = item.MinAmount;
+
+            excelWorkSheet["G" + Count].Style.Font.Height = 12;
+            excelWorkSheet["G" + Count].Style.TopBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["G" + Count].Style.BottomBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["G" + Count].Style.LeftBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["G" + Count].Style.RightBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["G" + Count].Style.VerticalAlignment = IronXL.Styles.VerticalAlignment.Center;
+            excelWorkSheet["G" + Count].Value = item.MaxAmount;
+
+            excelWorkSheet["H" + Count].Style.Font.Height = 12;
+            excelWorkSheet["H" + Count].Style.TopBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["H" + Count].Style.BottomBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["H" + Count].Style.LeftBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["H" + Count].Style.RightBorder.Type = IronXL.Styles.BorderType.Thin;
+            excelWorkSheet["H" + Count].Style.VerticalAlignment = IronXL.Styles.VerticalAlignment.Center;
+            excelWorkSheet["H" + Count].Value = item.LimitAmount;
+
+            Count++;
+        }
+
+        excelWorkSheet.PrintSetup.PrintOrientation = IronXL.Printing.PrintOrientation.Portrait;
+        excelWorkSheet.PrintSetup.PaperSize = IronXL.Printing.PaperSize.A4;
+
+        fileContents = excelWorkbook.ToByteArray();
+
+        DateTime fileCreationDatetime = DateTime.Now;
+        var fileName = string.Format("{0}.xlsx", fileCreationDatetime.ToString(@"yyyyMMdd") + "_" + fileCreationDatetime.ToString(@"HHmmss") + "_" + "FeeBindReport");
+
+        iJSRuntime.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(fileContents));
+    }
+
+
+    // EXPORT TO PDF SECTION
+
+    private void ExportToPdf()
+    {
+        GeneratePdf(iJSRuntime);
+    }
+
+    private void GeneratePdf(IJSRuntime iJSRuntime)
+    {
+        byte[] reportContents;
+
+        _pdfDocument = new Document(PageSize.A4, 40f, 40f, 40f, 40f);
+        _fontNormal = FontFactory.GetFont("ARIAL", 9f, 0);
+        _fontBold = FontFactory.GetFont("ARIAL", 10f, 0);
+        _fontTitle = FontFactory.GetFont("ARIAL", 16f, 0);
+
+        PdfPTable _pdfTable = new PdfPTable(8);
+        _pdfTable.SetWidths(new[] { 20, 20, 10, 10, 10, 10, 10, 10 });
+        _pdfTable.WidthPercentage = 100;
+
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.Gray;
+
+        _pdfWriter = PdfWriter.GetInstance(_pdfDocument, _memoryStream);
+
+        _pdfDocument.Open();
+
+        // Generate Header
+        _pdfDocument.Add(new Paragraph("FeeBind Report", _fontTitle));
+        _pdfDocument.Add(new Paragraph("\n"));
+
+        _pdfCell = new PdfPCell(new Phrase("Merchant Name", _fontBold));
+        // _pdfCell.Colspan = 1;
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Payment Type", _fontBold));
+        // _pdfCell.Colspan = 1;
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Currency", _fontBold));
+        // _pdfCell.Colspan = 1;
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Fee Rate", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Fee Bind Type", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Min. Amount", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Max. Amount", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Daily Limit Amount", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfTable.CompleteRow();
+
+        // Generate Body
+        List<FeeBind> _oFeeBind = new List<FeeBind>();
+        _oFeeBind = reportService.FeeBindReport();
+
+        foreach (var item in _oFeeBind)
+        {
+            _pdfCell = new PdfPCell(new Phrase(item.MerchantName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.PaymentType, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.CurrencyCode, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.FeeRate.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.FeeBindType, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.MinAmount.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.MaxAmount.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.LimitAmount.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+
+            //_pdfTable.AddCell(new PdfPCell(new Phrase(item.MerchantName, _fontNormal)));
+            //_pdfTable.AddCell(new PdfPCell(new Phrase(item.PaymentType, _fontNormal)));
+            //_pdfTable.AddCell(new PdfPCell(new Phrase(item.CurrencyCode, _fontNormal)));
+            //_pdfTable.AddCell(new PdfPCell(new Phrase(item.FeeRate.ToString(), _fontNormal)));
+            //_pdfTable.AddCell(new PdfPCell(new Phrase(item.FeeBindType, _fontNormal)));
+            //_pdfTable.AddCell(new PdfPCell(new Phrase(item.MinAmount.ToString(), _fontNormal)));
+            //_pdfTable.AddCell(new PdfPCell(new Phrase(item.MaxAmount.ToString(), _fontNormal)));
+            //_pdfTable.AddCell(new PdfPCell(new Phrase(item.LimitAmount.ToString(), _fontNormal)));
+        }
+
+        // Generate Footer
+        _pdfDocument.Add(new Paragraph("\n"));
+        _pdfWriter.PageEvent = new PdfFooter();
+
+        _pdfDocument.Add(_pdfTable);
+
+        _pdfDocument.Close();
+
+        reportContents = _memoryStream.ToArray();
+
+        DateTime fileCreationDatetime = DateTime.Now;
+        var fileName = string.Format("{0}.pdf", fileCreationDatetime.ToString(@"yyyyMMdd") + "_" + fileCreationDatetime.ToString(@"HHmmss") + "_" + "FeeBindReport");
+
+        iJSRuntime.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(reportContents));
+    }
+
+
+    //private void CreatePDF()
+    //{
+    //    string fileName = string.Empty;
+    //    DateTime fileCreationDatetime = DateTime.Now;
+    //    fileName = string.Format("{0}.pdf", fileCreationDatetime.ToString(@"yyyyMMdd") + "_" + fileCreationDatetime.ToString(@"HHmmss"));
+    //    string pdfPath = Server.MapPath(@"~\PDFs\") + fileName;
+
+    //    using (FileStream msReport = new FileStream(pdfPath, FileMode.Create))
+    //    {
+    //        //step 1
+    //        using (Document pdfDoc = new Document(PageSize.A4, 10f, 10f, 140f, 10f))
+    //        {
+    //            try
+    //            {
+    //                // step 2
+    //                PdfWriter pdfWriter = PdfWriter.GetInstance(pdfDoc, msReport);
+    //                pdfWriter.PageEvent = new Common.ITextEvents();
+
+    //                //open the stream
+    //                pdfDoc.Open();
+
+    //                for (int i = 0; i < 10; i++)
+    //                {
+    //                    Paragraph para = new Paragraph("Hello world. Checking Header Footer", new Font(Font.FontFamily.HELVETICA, 22));
+    //                    para.Alignment = Element.ALIGN_CENTER;
+    //                    pdfDoc.Add(para);
+    //                    pdfDoc.NewPage();
+    //                }
+
+    //                pdfDoc.Close();
+    //            }
+    //            catch (Exception ex)
+    //            {
+    //                //handle exception
+    //            }
+    //            finally
+    //            {
+    //            }
+    //        }
+    //    }
+    //}
+
+
+
+
+
+}

@@ -1,0 +1,142 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "DataServices/1.0.0": {
+        "dependencies": {
+          "Dapper": "2.0.123",
+          "DataObjects": "1.0.0",
+          "Microsoft.Extensions.Configuration": "6.0.1",
+          "Microsoft.Extensions.Options": "6.0.0",
+          "MySqlConnector": "2.1.12"
+        },
+        "runtime": {
+          "DataServices.dll": {}
+        }
+      },
+      "Dapper/2.0.123": {
+        "runtime": {
+          "lib/net5.0/Dapper.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.0.123.33578"
+          }
+        }
+      },
+      "Microsoft.Extensions.Configuration/6.0.1": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "6.0.0",
+          "Microsoft.Extensions.Primitives": "6.0.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Extensions.Configuration.dll": {
+            "assemblyVersion": "6.0.0.0",
+            "fileVersion": "6.0.322.12309"
+          }
+        }
+      },
+      "Microsoft.Extensions.Configuration.Abstractions/6.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "6.0.0"
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/6.0.0": {},
+      "Microsoft.Extensions.Options/6.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0",
+          "Microsoft.Extensions.Primitives": "6.0.0"
+        }
+      },
+      "Microsoft.Extensions.Primitives/6.0.0": {
+        "dependencies": {
+          "System.Runtime.CompilerServices.Unsafe": "6.0.0"
+        }
+      },
+      "MySqlConnector/2.1.12": {
+        "runtime": {
+          "lib/net6.0/MySqlConnector.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.1.12.0"
+          }
+        }
+      },
+      "System.Runtime.CompilerServices.Unsafe/6.0.0": {},
+      "DataObjects/1.0.0": {
+        "runtime": {
+          "DataObjects.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "DataServices/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Dapper/2.0.123": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-RDFF4rBLLmbpi6pwkY7q/M6UXHRJEOerplDGE5jwEkP/JGJnBauAClYavNKJPW1yOTWRPIyfj4is3EaJxQXILQ==",
+      "path": "dapper/2.0.123",
+      "hashPath": "dapper.2.0.123.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Configuration/6.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-BUyFU9t+HzlSE7ri4B+AQN2BgTgHv/uM82s5ZkgU1BApyzWzIl48nDsG5wR1t0pniNuuyTBzG3qCW8152/NtSw==",
+      "path": "microsoft.extensions.configuration/6.0.1",
+      "hashPath": "microsoft.extensions.configuration.6.0.1.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Configuration.Abstractions/6.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-qWzV9o+ZRWq+pGm+1dF+R7qTgTYoXvbyowRoBxQJGfqTpqDun2eteerjRQhq5PQ/14S+lqto3Ft4gYaRyl4rdQ==",
+      "path": "microsoft.extensions.configuration.abstractions/6.0.0",
+      "hashPath": "microsoft.extensions.configuration.abstractions.6.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions/6.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-xlzi2IYREJH3/m6+lUrQlujzX8wDitm4QGnUu6kUXTQAWPuZY8i+ticFJbzfqaetLA6KR/rO6Ew/HuYD+bxifg==",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/6.0.0",
+      "hashPath": "microsoft.extensions.dependencyinjection.abstractions.6.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Options/6.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-dzXN0+V1AyjOe2xcJ86Qbo233KHuLEY0njf/P2Kw8SfJU+d45HNS2ctJdnEnrWbM9Ye2eFgaC5Mj9otRMU6IsQ==",
+      "path": "microsoft.extensions.options/6.0.0",
+      "hashPath": "microsoft.extensions.options.6.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Primitives/6.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-9+PnzmQFfEFNR9J2aDTfJGGupShHjOuGw4VUv+JB044biSHrnmCIMD+mJHmb2H7YryrfBEXDurxQ47gJZdCKNQ==",
+      "path": "microsoft.extensions.primitives/6.0.0",
+      "hashPath": "microsoft.extensions.primitives.6.0.0.nupkg.sha512"
+    },
+    "MySqlConnector/2.1.12": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-XIYN95wlj6oIuWsIPrGmgpiD3mt3Zsv/zOz8gsbrgb8pW/msmZPFmmX2t7nDL5nx1r/fWfUSA1jmiQAmiykGAQ==",
+      "path": "mysqlconnector/2.1.12",
+      "hashPath": "mysqlconnector.2.1.12.nupkg.sha512"
+    },
+    "System.Runtime.CompilerServices.Unsafe/6.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/iUeP3tq1S0XdNNoMz5C9twLSrM/TH+qElHkXWaPvuNOt+99G75NrV0OS2EqHx5wMN7popYjpc8oTjC1y16DLg==",
+      "path": "system.runtime.compilerservices.unsafe/6.0.0",
+      "hashPath": "system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512"
+    },
+    "DataObjects/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

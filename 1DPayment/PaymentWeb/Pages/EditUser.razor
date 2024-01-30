@@ -1,0 +1,117 @@
+﻿@page "/edituser/{UserId:int}";
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+@inject RoleService roleService;
+@inject RecordStatusService recordStatusService;
+
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+
+<RadzenContent class="remove-content">
+    <ChildContent>
+        <RadzenTemplateForm TItem="User" Data="@objUser" Submit=@OnFormSubmit>
+            <div class="row">
+                <div class="form-group">
+                    <RadzenLabel Text="Full Name *" />
+                    <RadzenTextBox Name="Name" @bind-Value=@objUser.Name MaxLength="50" class="form-control" />
+                    <RadzenRequiredValidator Component="Name" Text="Your Name is Required" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Email *" />
+                    <RadzenTextBox Name="Email" @bind-Value=@objUser.Email MaxLength="50" oninput="this.value=this.value.toLowerCase()" class="form-control" />
+                    <ValidationMessage For="@(() => objUser.Email)" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Password *" />
+                    <RadzenPassword Name="Password" @bind-Value=@objUser.Password class="form-control" />
+                    <RadzenRequiredValidator Component="Password" Text="Password is Required" />
+                    <RadzenLengthValidator Component="Password" Min="5" Text="Password should be at least 5 Characters" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Role *" />
+                    <RadzenDropDown Name="RoleName" Data=@listRole Placeholder="-- Choose --" TextProperty="RoleName" ValueProperty="RoleId" @bind-Value="@((objUser.RoleId))" class="form-control" />
+                    <RadzenRequiredValidator Component="RoleName" Text="Select Role" DefaultValue="0" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Status" />
+                    <RadzenDropDown Name="Status" Data="@listRecordStatus" TextProperty="Status" ValueProperty="StatusId" @bind-Value="@((objUser.StatusId))" class="form-control" />
+                    <RadzenRequiredValidator Component="Status" Text="Select Status" DefaultValue="0" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col offset-sm-3 mt-3">
+                    <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Save" Icon="save" />
+                    <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Light" Text="Cancel" Icon="cancel" Click="@CancelButtonClick" class="ms-2" />
+                </div>
+            </div>
+        </RadzenTemplateForm>
+    </ChildContent>
+</RadzenContent>
+
+@code {
+    [Parameter]
+    public int UserId { get; set; }
+
+    User objUser = new();
+    IEnumerable<Role>? listRole;
+    IEnumerable<RecordStatus>? listRecordStatus;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRole();
+        await LoadRecordStatus();
+        objUser = await userService.SelectById(UserId);
+
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objUser.UpdatedBy = userAccount.UserId;
+
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await userService.Update(objUser);
+            if (result == true)
+            {
+                Dialog.Close(true);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        await Task.Run(() => Dialog.Close());
+    }
+
+    async Task LoadRole()
+    {
+        listRole = await Task.Run(() => roleService.SelectActive());
+    }
+
+    protected async Task LoadRecordStatus()
+    {
+        listRecordStatus = await Task.Run(recordStatusService.SelectAll);
+    }
+}

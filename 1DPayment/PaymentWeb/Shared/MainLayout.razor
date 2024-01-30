@@ -1,0 +1,98 @@
+﻿@inherits LayoutComponentBase
+
+<PageTitle>1DPayment</PageTitle>
+
+@using System.Security.Claims;
+
+@inject AuthenticationStateProvider authStateProvider;
+@inject NavigationManager Navigation;
+
+<style>
+    .header-item {
+        height: 50px !important;
+    }
+
+    .top-row a[b-rg5s3rnw5y], .top-row .btn-link[b-rg5s3rnw5y] {
+        white-space: nowrap;
+        /* margin-left: 1.5rem; */
+    }
+</style>
+
+<AuthorizeView>
+    <Authorized>
+
+
+
+
+<div class="page">
+
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+
+                    <div class="d-flex align-items-center">
+                        <div class="dropdown topbar-head-dropdown">
+                            <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
+                                    id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"
+                                    aria-expanded="false">
+                                <i class='bx bx-bell fs-22'></i>
+                                <span class="position-absolute topbar-badge fs-10 translate-middle badge rounded-pill bg-danger">0</span>
+                            </button>
+                        </div>
+
+                        <div class="dropdown ms-sm-4 header-item bg-soft-info">
+                            <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown"
+                                    aria-haspopup="true" aria-expanded="false">
+                                <span class="d-flex align-items-center">
+                                    <img class="rounded-circle header-profile-user" src="assets/images/user-dummy.jpg" />
+                                    <span class="text-start ms-xl-3">
+                                        <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">Welcome! @context.User.Identity.Name </span>
+                                    </span>
+                                </span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <!-- item-->
+                                <a class="dropdown-item" href="/">
+                                    <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span>Profile</span>
+                                </a>
+                                <a class="dropdown-item" href="/">
+                                    <i class="mdi mdi-message-text-outline text-muted fs-16 align-middle me-1"></i> <span>Messages</span>
+                                </a>
+
+                                <div class="dropdown-divider"></div>
+
+                                <a class="dropdown-item" href="/logout" @onclick="Logout">
+                                    <i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> <span>Logout</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+    </Authorized>
+
+ </AuthorizeView>
+
+<RadzenDialog />
+<RadzenNotification />
+<RadzenTooltip />
+
+@code {
+
+    private async Task Logout()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+        await customAuthStateProvider.UpdateAuthenticationState(null);
+        Navigation.NavigateTo("/logout", true);
+    }
+}

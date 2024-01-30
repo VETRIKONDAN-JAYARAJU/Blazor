@@ -1,0 +1,194 @@
+﻿@page "/qrcode/{QRCodeId:int}";
+
+@using System.ComponentModel.DataAnnotations;
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject QRCodeService qrcodeService;
+@inject RecordStatusService recordStatusService;
+
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+@inject TooltipService tooltipService;
+
+@inject IWebHostEnvironment webHostEnvironment;
+
+<RadzenContent class="remove-content">
+    <ChildContent>
+        <RadzenTemplateForm TItem="QRCode" Data="@objQRCode" Submit=@OnFormSubmit>
+            <DataAnnotationsValidator />
+            <div class="row">
+                <div class="form-group">
+                    <RadzenLabel Text="QR Code *" />
+                    <RadzenTextBox Name="QRCodeName" @bind-Value=@objQRCode.QRCodeName MaxLength="50" oninput="this.value=this.value.toUpperCase()"  class="form-control" />
+                    <RadzenRequiredValidator Component="QRCodeName" Text="QRCode is required" />
+                    <RadzenLengthValidator Component="QRCodeName" Min="10" Text="QRCode should be at least 10 characters" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Upload QR Code Image *" class="me-2" />
+                    <RadzenIcon Icon="announcement" class="danger" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Style = "color:#000" }))" />
+                    <InputFile id="FileName" @bind-Value=@objQRCode.FileName OnChange="@LoadFiles" title="Upload jpg or png image only" class=" bg-light w-75" />
+                    <ValidationMessage For="@(() => objQRCode.FileName)" />
+
+                    <RadzenImage Path="@objQRCode.FilePath" class="rounded img-thumbnail" style="height:70px; width:70px;" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Status *" />
+                    <RadzenDropDown Name="Status" Data="@listRecordStatus" TextProperty="Status" ValueProperty="StatusId" @bind-Value="@((objQRCode.StatusId))" class="form-control" />
+                    <RadzenRequiredValidator Component="Status" Text="Select Status" DefaultValue="0" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col offset-sm-3 mt-3">
+                    <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Save" Icon="save" />
+                    <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Light" Text="Cancel" Icon="cancel" Click="@CancelButtonClick" class="ms-2" />
+                </div>
+            </div>
+        </RadzenTemplateForm>
+    </ChildContent>
+</RadzenContent>
+
+@code {
+    [Parameter]
+    public int QRCodeId { get; set; }
+
+    QRCode objQRCode = new();
+    IEnumerable<RecordStatus>? listRecordStatus;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRecordStatus();
+        objQRCode = await qrcodeService.SelectById(QRCodeId);
+
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objQRCode.UpdatedBy = userAccount.UserId;
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            if (objQRCode.FileName != null)
+            {
+                var result = await qrcodeService.Update(objQRCode);
+                if (result == true)
+                {
+                    Dialog.Close(true);
+                    Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+                }
+                else
+                {
+                    Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+                }
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Error, summary: "Please Upload QRCode Image");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+
+
+    //protected async Task OnFormSubmit()
+    //{
+    //    try
+    //    {
+    //        var result = await qrcodeService.Update(objQRCode);
+    //        if (result == true)
+    //        {
+    //            Dialog.Close(true);
+    //            Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+    //        }
+    //        else
+    //        {
+    //            Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+    //    }
+    //}
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        await Task.Run(() => Dialog.Close());
+    }
+
+    protected async Task LoadRecordStatus()
+    {
+        listRecordStatus = await Task.Run(recordStatusService.SelectAll);
+        StateHasChanged();
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs eventArgs)
+    {
+        try
+        {
+            foreach (var file in eventArgs.GetMultipleFiles())
+            {
+                var fileName = eventArgs.File.Name;
+                var fileSize = eventArgs.File.Size;
+                var fileExtension = Path.GetExtension(fileName);
+
+                if (fileSize > 1048576)
+                {
+                    Reset();
+                    Notification.Notify(NotificationSeverity.Error, summary: "Your image should be below 1MB");
+                }
+                else if (fileExtension.Contains("png") || fileExtension.Contains("jpg"))
+                {
+                    var newFileName = $"{Guid.NewGuid().ToString()}{fileExtension}";
+                    var folderDirectory = $"{webHostEnvironment.WebRootPath}\\qrcodeimages";
+
+                    if (!Directory.Exists(folderDirectory))
+                    {
+                        Directory.CreateDirectory(folderDirectory);
+                    }
+
+                    var filePath = Path.Combine(folderDirectory, newFileName);
+                    using FileStream fs = new FileStream(filePath, FileMode.Create);
+                    await file.OpenReadStream().CopyToAsync(fs);
+                    fs.Dispose();
+
+                    objQRCode.FileName = newFileName;
+                    objQRCode.FilePath = $"qrcodeimages/{newFileName}";
+                }
+                else
+                {
+                    Reset();
+                    Notification.Notify(NotificationSeverity.Error, summary: "Image format (png/jpg) only allowed");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+    }
+
+    private void ShowTooltip(ElementReference elementReference, TooltipOptions options)
+    {
+        tooltipService.Open(elementReference, "Your image should be (jpg,png) format and file size below 1mb", options);
+    }
+
+    private void Reset()
+    {
+        objQRCode = new QRCode { QRCodeName = string.Empty, FileName = string.Empty, FilePath = string.Empty };
+    }
+
+}

@@ -1,0 +1,19 @@
+{
+  "Version": 1,
+  "Hash": "MUcbMnN2StwN172Tqn4mXzMWNNw1q5VBDSLbdw6UbG0=",
+  "Source": "PaymentAPI",
+  "BasePath": "_content/PaymentAPI",
+  "Mode": "Default",
+  "ManifestType": "Publish",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "PaymentAPI\\wwwroot",
+      "Source": "PaymentAPI",
+      "ContentRoot": "D:\\1DPayment\\PaymentAPI\\wwwroot\\",
+      "BasePath": "_content/PaymentAPI",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": []
+}

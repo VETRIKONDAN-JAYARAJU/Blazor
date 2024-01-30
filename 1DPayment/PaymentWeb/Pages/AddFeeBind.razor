@@ -1,0 +1,298 @@
+﻿@page "/feebind";
+
+<PageTitle>Fee Bind Information</PageTitle>
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject FeeBindService feeBindService;
+@inject MerchantService merchantService;
+@inject PaymentMethodService paymentMethodService;
+@inject CurrencyService currencyService;
+
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+
+<div class="container-fluid">
+    <RadzenTemplateForm TItem="FeeBind" Data="@objFeeBind" Submit=@OnFormSubmit>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Add - Fee Bind Information</h4>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Merchant / Agent *" />
+                                    <RadzenDropDown Name="MerchantName" Data=@listMerchant Placeholder="-- Choose --" TextProperty="MerchantName" ValueProperty="MerchantId" @bind-Value="@((objFeeBind.MerchantId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="MerchantName" Text="Select Merchant / Agent" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Payment Type *" />
+                                    <RadzenDropDown Name="PaymentType" Data=@listPaymentType Placeholder="-- Choose --" TextProperty="PaymentType" ValueProperty="PaymentTypeId" @bind-Value="@((objFeeBind.PaymentTypeId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="PaymentType" Text="Select Payment Type" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Currency *" />
+                                    <RadzenDropDown Name="CurrencyName" Data=@listCurrency Placeholder="-- Choose --" TextProperty="CurrencyName" ValueProperty="CurrencyCode" @bind-Value="@((objFeeBind.CurrencyCode))" class="form-control" />
+                                    <RadzenRequiredValidator Component="CurrencyName" Text="Select Currency" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Fee Rate (in %) *" />
+                                    <RadzenNumeric Name="FeeRate" ShowUpDown="false" @bind-Value=@objFeeBind.FeeRate  class="form-control" />
+                                    <RadzenRequiredValidator Component="FeeRate" Text="Fee Rate is required" />
+                                    <RadzenRegexValidator Component="FeeRate" Text="Fee Rate should be 0 to 2 Percent" Pattern="^(10([\.][0]{1,})?$|[0-9]{1,2}([\.][0-9]{1,})?)$" />
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="row">
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Fee Bind Type *" />
+                                    <RadzenDropDown Name="FeeBindType" Data="@listFeeBindType" Placeholder="-- Choose --" TextProperty="Name" ValueProperty="Name" @bind-Value="@((objFeeBind.FeeBindType))" class="form-control" />
+                                    <RadzenRequiredValidator Component="FeeBindType" Text="Select FeeBind Type" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Minimum Amount *" />
+                                    <RadzenNumeric Name="MinAmount" @bind-Value=@objFeeBind.MinAmount ShowUpDown="false" class="form-control" />
+                                    <RadzenRequiredValidator Component="MinAmount" Text="Minimum Amount is Required" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Maximum Amount *" />
+                                    <RadzenNumeric Name="MaxAmount" @bind-Value=@objFeeBind.MaxAmount ShowUpDown="false" class="form-control" />
+                                    <RadzenRequiredValidator Component="MaxAmount" Text="Maximum Amount is Required" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Daily Limit Amount *" />
+                                    <RadzenNumeric Name="LimitAmount" @bind-Value=@objFeeBind.LimitAmount ShowUpDown="false" class="form-control" />
+                                    <RadzenRequiredValidator Component="LimitAmount" Text="Daily Limit Amount is Required" />
+                                </div>
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="row">
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Source Merchant *" />
+                                    <RadzenDropDown Name="SourceMerchant" Data=@listSourceMerchant Placeholder="-- Choose --" TextProperty="MerchantName" ValueProperty="MerchantId" @bind-Value="@((objFeeBind.SourceMerchant))" class="form-control" />
+                                    <RadzenRequiredValidator Component="SourceMerchant" Text="Select Source Merchant" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Submit" Text="Submit" Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" />
+                                        <RadzenButton ButtonType="ButtonType.Button" Text="Reset" Icon="refresh" ButtonStyle="ButtonStyle.Secondary" Click="Reset" class="ms-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </RadzenTemplateForm>
+
+
+    @* DataGrid Section Starts Here*@
+    @*------------------------------------------------------------------------------*@
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">View - Fee Bind Information</h4>
+                </div>
+
+                <div class="card-body">
+                    <RadzenDataGrid Data="@modelData" TItem="FeeBind" PageSize="10" AllowPaging="true" ShowPagingSummary="true" AllowSorting="true" AllowFiltering="true" PagerHorizontalAlign="HorizontalAlign.Left"
+                                    ColumnWidth="100%" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="FeeBind" Property="FeeBindId" Title="FEE BIND ID" Frozen="true" Filterable="false" Visible="false" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="MerchantName" Title="MERCHANT / AGENT NAME" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="PaymentType" Title="PAYMENT TYPE" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="CurrencyCode" Title="CURRENCY" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="FeeRate" Title="FEE RATE" TextAlign="TextAlign.Right" Filterable="false" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="FeeBindType" Title="FEEBIND TYPE" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="MinAmount" Title="MIN. AMOUNT"  />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="MaxAmount" Title="MAX. AMOUNT" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="LimitAmount" Title="DAILY LIMIT AMOUNT" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="SourceMerchant" Title="SOURCE MERCHANT" Filterable="false" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="Status" Title="STATUS" Filterable="false">
+                                <Template Context="data">
+                                    @if (@data.Status == "Active")
+                                    {
+                                        <span class="actives">@data.Status</span>
+                                    }
+                                    else if (@data.Status == "In Active")
+                                    {
+                                        <span class="inactive">@data.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="deleted">@data.Status</span>
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn TItem="FeeBind" Filterable="false" Sortable="false" Title="ACTION" TextAlign="TextAlign.Center">
+                                <Template Context="actionRecord">
+                                    <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Click="@((args) =>GridEditButtonClick(args, actionRecord))" @onclick:stopPropagation="true" title="Edit" />
+                                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@((args) =>GridDeleteButtonClick(args, actionRecord))" @onclick:stopPropagation="true" title="Delete" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    FeeBind objFeeBind = new();
+    IEnumerable<FeeBind>? modelData;
+    IEnumerable<Merchant>? listMerchant;
+
+    IEnumerable<PaymentMethod>? listPaymentType;
+    IEnumerable<Currency>? listCurrency;
+    IEnumerable<Merchant>? listSourceMerchant;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    public class DropdownValue
+    {
+        public string? Name { get; set; }
+    }
+
+    List<object> listFeeBindType = new List<object>()
+    {
+        new DropdownValue() { Name="Deposit" },
+        new DropdownValue() { Name="Payout" },
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objFeeBind.CreatedBy = userAccount.UserId;
+        
+        await LoadMerchant();
+        await LoadPaymentType();
+        await LoadCurrency();
+        await LoadSourceMerchant();
+        await LoadDataGrid();
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await feeBindService.Insert(objFeeBind);
+            if (result == true)
+            {
+                await LoadDataGrid();
+                Reset();
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Inserted Successfully");
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task GridEditButtonClick(MouseEventArgs args, dynamic data)
+    {
+        var dialogResult = await Dialog.OpenAsync<EditFeeBind>("Edit - Fee Bind Information", new Dictionary<string, object>() { { "FeeBindId", data.FeeBindId } });
+        if (Convert.ToBoolean(dialogResult) == true)
+        {
+            await LoadDataGrid();
+        }
+    }
+
+    protected async Task GridDeleteButtonClick(MouseEventArgs args, dynamic data)
+    {
+        try
+        {
+            if (await Dialog.Confirm("Are you sure you want to delete this record?", "Confirm", new ConfirmOptions() { OkButtonText = "Yes, Delete", CancelButtonText = "No, Cancel" }) == true)
+            {
+                var result = await feeBindService.Delete(data.FeeBindId);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Deleted Successfully");
+                await LoadDataGrid();
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task LoadDataGrid()
+    {
+        modelData = await Task.Run(feeBindService.SelectAll);
+        StateHasChanged();
+    }
+
+    async Task LoadMerchant()
+    {
+        listMerchant = await Task.Run(merchantService.SelectActive);
+    }
+
+    async Task LoadPaymentType()
+    {
+        listPaymentType = await Task.Run(paymentMethodService.SelectActive);
+    }
+
+    async Task LoadCurrency()
+    {
+        listCurrency = await Task.Run(currencyService.SelectActive);
+    }
+
+    async Task LoadSourceMerchant()
+    {
+        listSourceMerchant = await Task.Run(merchantService.SelectActive);
+    }
+
+    private void Reset()
+    {
+        objFeeBind = new FeeBind { FeeRate = null };
+    }
+}

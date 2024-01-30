@@ -1,0 +1,180 @@
+﻿@page "/currency";
+
+<PageTitle>Currency Information</PageTitle>
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject CurrencyService currencyService;
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+
+<div class="container-fluid">
+
+    <RadzenTemplateForm TItem="Currency" Data="@objCurrency" Submit=@OnFormSubmit>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Add - Currency Information</h4>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Currency Name *" />
+                                    <RadzenTextBox Name="CurrencyName" @bind-Value=@objCurrency.CurrencyName MaxLength="50" class="form-control" />
+                                    <RadzenRequiredValidator Component="CurrencyName" Text="Currency Name is Required" />
+                                    <RadzenLengthValidator Component="CurrencyName" Min="10" Text="Currency Name should be at least 10 characters" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Currency Code *" />
+                                    <RadzenTextBox Name="CurrencyCode" @bind-Value=@objCurrency.CurrencyCode MaxLength="3" oninput="this.value=this.value.toUpperCase()" class="form-control" />
+                                    <RadzenRequiredValidator Component="CurrencyCode" Text="Currency Code is Required" />
+                                    <RadzenRegexValidator Component="CurrencyCode" Text="Currency Code must be 3 Alphabets" Pattern="^[A-Z]{3}" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Submit" Text="Submit" Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </RadzenTemplateForm>
+
+
+    @* DataGrid Section Starts Here*@
+    @*------------------------------------------------------------------------------*@
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">View - Currency Information</h4>
+                </div>
+
+                <div class="card-body">
+                    <RadzenDataGrid Data="@modelData" TItem="Currency" PageSize="10" AllowPaging="true" ShowPagingSummary="true" AllowSorting="true" AllowFiltering="true" PagerHorizontalAlign="HorizontalAlign.Left"
+                                   ColumnWidth="100%" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="Currency" Property="CurrencyId" Title="CURRENCY ID" Width="10%" Frozen="true" Filterable="false" Visible="false" />
+                            <RadzenDataGridColumn TItem="Currency" Property="CurrencyName" Title="CURRENCY NAME" Width="30%" />
+                            <RadzenDataGridColumn TItem="Currency" Property="CurrencyCode" Title="CURRENCY CODE" Width="20%" />
+                            <RadzenDataGridColumn TItem="Currency" Property="Status" Title="STATUS" Width="20%" Filterable="false">
+                                <Template Context="data">
+                                    @if (@data.Status == "Active")
+                                    {
+                                        <span class="actives">@data.Status</span>
+                                    }
+                                    else if (@data.Status == "In Active")
+                                    {
+                                        <span class="inactive">@data.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="deleted">@data.Status</span>
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn TItem="Currency" Filterable="false" Sortable="false" Width="20%" Title="ACTION" TextAlign="TextAlign.Center">
+                                <Template Context="actionRecord">
+                                    <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Click="@((args) =>GridEditButtonClick(args, actionRecord))" @onclick:stopPropagation="true" title="Edit" />
+                                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@((args) =>GridDeleteButtonClick(args, actionRecord))" @onclick:stopPropagation="true" title="Delete" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    Currency objCurrency = new();
+    IEnumerable<Currency>? modelData;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objCurrency.CreatedBy = userAccount.UserId;
+
+        await LoadDataGrid();
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await currencyService.Insert(objCurrency);
+            if (result == true)
+            {
+                await LoadDataGrid();
+                Reset();
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Inserted Successfully");
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task GridEditButtonClick(MouseEventArgs args, dynamic data)
+    {
+        var dialogResult = await Dialog.OpenAsync<EditCurrency>("Edit - Currency Information", new Dictionary<string, object>() { { "CurrencyId", data.CurrencyId } });
+        if (Convert.ToBoolean(dialogResult) == true)
+        {
+            await LoadDataGrid();
+        }
+    }
+
+    protected async Task GridDeleteButtonClick(MouseEventArgs args, dynamic data)
+    {
+        try
+        {
+            if (await Dialog.Confirm("Are you sure you want to delete this record?", "Confirm", new ConfirmOptions() { OkButtonText = "Yes, Delete", CancelButtonText = "No, Cancel" }) == true)
+            {
+                var result = await currencyService.Delete(data.CurrencyId);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Deleted Successfully");
+                await LoadDataGrid();
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task LoadDataGrid()
+    {
+        modelData = await Task.Run(currencyService.SelectAll);
+        StateHasChanged();
+    }
+
+    private void Reset()
+    {
+        objCurrency = new Currency { CurrencyName = string.Empty, CurrencyCode = string.Empty };
+    }
+}

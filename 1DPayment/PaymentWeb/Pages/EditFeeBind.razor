@@ -1,0 +1,151 @@
+﻿@page "/editfeebind/{FeeBindId:int}";
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject FeeBindService feeBindService;
+@inject MerchantService merchantService;
+@inject PaymentMethodService paymentMethodService;
+@inject CurrencyService currencyService;
+@inject RecordStatusService recordStatusService;
+
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+
+<RadzenContent class="remove-content">
+    <ChildContent>
+        <RadzenTemplateForm TItem="FeeBind" Data="@objFeeBind" Submit=@OnFormSubmit>
+            <div class="row">
+                <div class="form-group">
+                    <RadzenLabel Text="Merchant / Agent *" />
+                    <RadzenDropDown Name="MerchantName" Data=@listMerchant Placeholder="-- Choose --" TextProperty="MerchantName" ValueProperty="MerchantId" @bind-Value="@((objFeeBind.MerchantId))" class="form-control" />
+                    <RadzenRequiredValidator Component="MerchantName" Text="Select Merchant / Agent" DefaultValue="0" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Payment Type *" />
+                    <RadzenDropDown Name="PaymentType" Data=@listPaymentType Placeholder="-- Choose --" TextProperty="PaymentType" ValueProperty="PaymentTypeId" @bind-Value="@((objFeeBind.PaymentTypeId))" class="form-control" />
+                    <RadzenRequiredValidator Component="PaymentType" Text="Select Payment Type" DefaultValue="0" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Currency *" />
+                    <RadzenDropDown Name="CurrencyName" Data=@listCurrency Placeholder="-- Choose --" TextProperty="CurrencyName" ValueProperty="CurrencyCode" @bind-Value="@((objFeeBind.CurrencyCode))" class="form-control" />
+                    <RadzenRequiredValidator Component="CurrencyName" Text="Select Currency" DefaultValue="0" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Fee Rate (%) *" />
+                    <RadzenNumeric Name="FeeRate" ShowUpDown="false" @bind-Value=@objFeeBind.FeeRate Min="0" Max="100" class="form-control" />
+                    <RadzenRequiredValidator Component="FeeRate" Text="Fee Rate is required" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Fee Bind Type *" />
+                    <RadzenDropDown Name="FeeBindType" Data="@listFeeBindType" Placeholder="-- Choose --" TextProperty="Name" ValueProperty="Name" @bind-Value="@((objFeeBind.FeeBindType))" class="form-control" />
+                    <RadzenRequiredValidator Component="FeeBindType" Text="Select FeeBind Type" DefaultValue="0" />
+                </div>
+
+
+                <div class="form-group">
+                    <RadzenLabel Text="Status *" />
+                    <RadzenDropDown Name="Status" Data="@listRecordStatus" TextProperty="Status" ValueProperty="StatusId" @bind-Value="@((objFeeBind.StatusId))" class="form-control" />
+                    <RadzenRequiredValidator Component="Status" Text="Select Status" DefaultValue="0" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col offset-sm-3 mt-3">
+                    <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Save" Icon="save" />
+                    <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Light" Text="Cancel" Icon="cancel" Click="@CancelButtonClick" class="ms-2" />
+                </div>
+            </div>
+        </RadzenTemplateForm>
+    </ChildContent>
+</RadzenContent>
+
+@code {
+    [Parameter]
+    public int FeeBindId { get; set; }
+
+    FeeBind objFeeBind = new();
+    IEnumerable<Merchant>? listMerchant;
+    IEnumerable<PaymentMethod>? listPaymentType;
+    IEnumerable<Currency>? listCurrency;
+    IEnumerable<RecordStatus>? listRecordStatus;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    public class DropdownValue
+    {
+        public string? Name { get; set; }
+    }
+
+    List<object> listFeeBindType = new List<object>()
+    {
+        new DropdownValue() { Name="Deposit" },
+        new DropdownValue() { Name="Payout" },
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMerchant();
+        await LoadPaymentType();
+        await LoadCurrency();
+        await LoadStatus();
+        objFeeBind = await feeBindService.SelectById(FeeBindId);
+
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objFeeBind.UpdatedBy = userAccount.UserId;
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await feeBindService.Update(objFeeBind);
+            if (result == true)
+            {
+                Dialog.Close(true);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        await Task.Run(() => Dialog.Close());
+    }
+
+    async Task LoadMerchant()
+    {
+        listMerchant = await Task.Run(merchantService.SelectActive);
+    }
+
+    async Task LoadPaymentType()
+    {
+        listPaymentType = await Task.Run(paymentMethodService.SelectActive);
+    }
+
+    async Task LoadCurrency()
+    {
+        listCurrency = await Task.Run(currencyService.SelectActive);
+    }
+
+    protected async Task LoadStatus()
+    {
+        listRecordStatus = await Task.Run(recordStatusService.SelectAll);
+    }
+}

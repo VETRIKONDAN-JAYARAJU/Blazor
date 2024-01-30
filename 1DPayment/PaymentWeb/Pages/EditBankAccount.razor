@@ -1,0 +1,264 @@
+﻿@page "/editbankaccount/{BankAccountId:int}";
+
+<PageTitle>Edit Bank Account Information</PageTitle>
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject BankAccountService bankAccountService;
+@inject BankService bankService;
+@inject QRCodeService qrCodeService;
+@inject CurrencyService currencyService;
+
+@inject RecordStatusService recordStatusService;
+
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+@inject NavigationManager Navigation;
+
+<div class="container-fluid">
+    <RadzenTemplateForm TItem="BankAccount" Data="@objBankAccount" Submit=@OnFormSubmit>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Edit - Bank Account Information</h4>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Bank *" />
+                                    <RadzenDropDown Name="BankName" Data=@listBank TextProperty="BankName" ValueProperty="BankId" @bind-Value="@((objBankAccount.BankId))" Placeholder="-- Choose --" class="form-control" />
+                                    <RadzenRequiredValidator Component="BankName" Text="Select Bank" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Bank Account No *" />
+                                    <RadzenTextBox Name="AccountNo" @bind-Value=@objBankAccount.AccountNo MaxLength="20" class="form-control" />
+                                    <RadzenRequiredValidator Component="AccountNo" Text="Account No is required" />
+                                    <RadzenRegexValidator Component="AccountNo" Text="Bank Account No should be Numeric" Pattern="^[0-9]*$" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Name *" />
+                                    <RadzenTextBox Name="Name" @bind-Value=@objBankAccount.Name MaxLength="30" class="form-control" />
+                                    <RadzenRequiredValidator Component="Name" Text="Name is required" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Nick Name *" />
+                                    <RadzenTextBox Name="NickName" @bind-Value=@objBankAccount.NickName MaxLength="30" class="form-control" />
+                                    <RadzenRequiredValidator Component="NickName" Text="Nick Name is required" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="QR Code *" />
+                                    <RadzenDropDown Name="QRCodeName" Data=@listQRCode TextProperty="QRCodeName" ValueProperty="QRCodeId" @bind-Value="@((objBankAccount.QRCodeId))" Placeholder="-- Choose --" class="form-control" />
+                                    <RadzenRequiredValidator Component="QRCodeName" Text="Please Select QRCode" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Bank Login URL *" />
+                                    <RadzenTextBox Name="BankLoginUrl" @bind-Value=@objBankAccount.BankLoginUrl MaxLength="500" class="form-control" />
+                                    <RadzenRequiredValidator Component="BankLoginUrl" Text="Bank Login URL is required" />
+                                    <RadzenRegexValidator Component="BankLoginUrl" Text="Bank Login URL must be proper" Pattern="(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Login Id *" />
+                                    <RadzenTextBox Name="LoginId" @bind-Value=@objBankAccount.LoginId MaxLength="50" class="form-control" />
+                                    <RadzenRequiredValidator Component="LoginId" Text="Login Id is required" />
+                                    <RadzenLengthValidator Component="LoginId" Min="5" Text="Login Id should be at least 5 characters" />
+
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Password *" />
+                                    <RadzenTextBox Name="Password" @bind-Value=@objBankAccount.Password MaxLength="50" class="form-control" />
+                                    <RadzenRequiredValidator Component="Password" Text="Password is required" />
+                                    <RadzenLengthValidator Component="Password" Min="5" Text="Password should be at least 5 characters" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Province *" />
+                                    <RadzenTextBox Name="Province" @bind-Value=@objBankAccount.Province MaxLength="50" class="form-control" />
+                                    <RadzenRequiredValidator Component="Province" Text="Province is required" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="State *" />
+                                    <RadzenTextBox Name="State" @bind-Value=@objBankAccount.State MaxLength="50" class="form-control" />
+                                    <RadzenRequiredValidator Component="State" Text="State is required" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Account Type *" />
+                                    <RadzenDropDown Name="Type" Data="@listAccountType" Placeholder="-- Choose --" TextProperty="Name" ValueProperty="Name" @bind-Value="@((objBankAccount.Type))" class="form-control" />
+                                    <RadzenRequiredValidator Component="Type" Text="Select Account Type" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Balance Amount *" />
+                                    <RadzenNumeric Name="BalanceAmount" @bind-Value=@objBankAccount.BalanceAmount ShowUpDown="false" class="form-control" />
+                                    <RadzenRequiredValidator Component="BalanceAmount" Text="Balance Amount is Required" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Currency *" />
+                                    <RadzenDropDown Name="CurrencyName" Data=@listCurrency Placeholder="-- Choose --" TextProperty="CurrencyName" ValueProperty="CurrencyCode" @bind-Value="@((objBankAccount.CurrencyCode))" class="form-control" />
+                                    <RadzenRequiredValidator Component="CurrencyName" Text="Select Currency" DefaultValue="0" />
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Status" />
+                                    <RadzenDropDown Name="Status" Data="@listRecordStatus" TextProperty="Status" ValueProperty="StatusId" @bind-Value="@((objBankAccount.StatusId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="Status" Text="Select Status" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Submit" Text="Submit" Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Button" Text="Back to Previous" Icon="refresh" ButtonStyle="ButtonStyle.Warning" Click=@(args => OnClick()) />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </RadzenTemplateForm>
+</div>
+
+@code {
+    [Parameter]
+    public int BankAccountId { get; set; }
+    BankAccount objBankAccount = new();
+
+    IEnumerable<Bank>? listBank;
+    IEnumerable<QRCode>? listQRCode;
+    IEnumerable<Currency>? listCurrency;
+    IEnumerable<RecordStatus>? listRecordStatus;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    public class DropdownValue
+    {
+        public string? Name { get; set; }
+    }
+
+    List<object> listAccountType = new List<object>()
+    {
+        new DropdownValue() { Name="Deposit" },
+        new DropdownValue() { Name="Payout" },
+        new DropdownValue() { Name="Settlement" },
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBank();
+        await LoadQRCode();
+        await LoadCurrency();
+        await LoadStatus();
+        objBankAccount = await bankAccountService.SelectById(BankAccountId);
+
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objBankAccount.UpdatedBy = userAccount.UserId;
+
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await bankAccountService.Update(objBankAccount);
+            if (result == true)
+            {
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+                Navigation.NavigateTo("/bankaccount", false);
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    async Task LoadBank()
+    {
+        listBank = await Task.Run(() => bankService.SelectActive());
+    }
+
+    async Task LoadQRCode()
+    {
+        listQRCode = await Task.Run(() => qrCodeService.SelectActive());
+    }
+
+    async Task LoadCurrency()
+    {
+        listCurrency = await Task.Run(currencyService.SelectActive);
+    }
+
+    protected async Task LoadStatus()
+    {
+        listRecordStatus = await Task.Run(recordStatusService.SelectAll);
+    }
+
+    void OnClick()
+    {
+        Navigation.NavigateTo("/bankaccount", false);
+    }
+}

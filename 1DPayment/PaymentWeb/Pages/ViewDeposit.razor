@@ -1,0 +1,122 @@
+﻿@page "/viewdeposit";
+
+<PageTitle>View Deposit Information</PageTitle>
+
+@inject NavigationManager Navigation;
+@inject NotificationService Notification;
+
+<style>
+    .sucess, .notproces, .fail {
+        display: inline-block;
+        font-size: 0.8rem;
+        color: #fff;
+        padding: 0.02rem 0.5rem;
+        border-radius: 0.2rem;
+    }
+
+    .sucess {
+        background-color: rgb(0, 155, 81);
+    }
+
+    .notproces {
+        background-color: #adcdcf;
+    }
+
+    .fail {
+        background-color: #fa9c92;
+    }
+</style>
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">View - Deposit Information</h4>
+                </div>
+
+                <div class="card-body">
+                    <div style="width: calc(100vw - 350px);">
+                        <RadzenDataGrid Data="@modelData" TItem="Deposit" PageSize="10" AllowPaging="true" ShowPagingSummary="true" AllowSorting="true" AllowFiltering="true" PagerHorizontalAlign="HorizontalAlign.Left"
+                                        ColumnWidth="150px" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="Deposit" Property="DepositId" Title="DEPOSIT ID" Frozen="true" Filterable="false" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="MerchantName" Title="MERCHANT NAME" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="OrderCorrespondenceId" Title="ORDER COR.ID" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="MemberCorrespondenceId" Title="MEMBER COR.ID" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="ReferenceNo" Title="REFERENCE NO" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="PaymentType" Title="PAYMENT TYPE" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="BankName" Title="BANK" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="AccountNo" Title="BANK AC.NO" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="CurrencyCode" Title="CURRENCY" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="Amount" Title="AMOUNT" FormatString="{0:N2}" TextAlign="TextAlign.Right" Filterable="false" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="ActualAmount" Title="ACTUAL AMOUNT" FormatString="{0:N2}" TextAlign="TextAlign.Right" Filterable="false" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="EWalletName" Title="EWALLET NAME" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="QRCodeName" Title="QR CODE" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="TransactionCode" Title="TRANSACTION CODE" />
+                                <RadzenDataGridColumn TItem="Deposit" Property="Status" Title="STATUS" Filterable="false">
+                                    <Template Context="data">
+                                        @if (@data.Status == "Success")
+                                        {
+                                            <span class="sucess">@data.Status</span>
+                                        }
+                                        else if (@data.Status == "Not Processed")
+                                        {
+                                            <span class="notproces">@data.Status</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fail">@data.Status</span>
+                                        }
+                                    </Template>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="Deposit" Filterable="false" Sortable="false" Title="ACTION" TextAlign="TextAlign.Center">
+                                    <Template Context="actionRecord">
+                                        <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Click="@((args) =>GridEditButtonClick(args, actionRecord))" @onclick:stopPropagation="true" title="Edit" Disabled />
+                                    </Template>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    public IEnumerable<Deposit>? modelData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetJsonData();
+    }
+
+    protected async Task GridEditButtonClick(MouseEventArgs args, dynamic data)
+    {
+        Navigation.NavigateTo($"editdeposit/{data.DepositId}/{data.PaymentTypeId}/{data.BankId}/{data.BankAccountId} ", forceLoad: false);
+        await InvokeAsync(() => { StateHasChanged(); });
+    }
+
+    protected async Task GetJsonData()
+    {
+        // You should make this more robust by actually checking the certificate:
+        var httpClientHandler = new HttpClientHandler();
+        httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+
+        using (var client = new HttpClient(httpClientHandler))
+        {
+            try
+            {
+                  modelData = await client.GetFromJsonAsync<List<Deposit>>("https://localhost:7245/api/deposit/get");
+               //  modelData = await client.GetFromJsonAsync<List<Deposit>>("http://164.68.109.104:8080/api/deposit/get");
+            }
+            catch (Exception ex)
+            {
+                Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+            }
+        }
+    }
+}

@@ -1,0 +1,224 @@
+﻿@page "/editmerchant/{MerchantId:int}";
+
+<PageTitle>Edit Merchant / Agent Information</PageTitle>
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject MerchantService merchantService;
+@inject BankService bankService;
+@inject DeviceService deviceService;
+@inject RecordStatusService recordStatusService;
+
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+@inject NavigationManager Navigation;
+
+<div class="container-fluid">
+    <RadzenTemplateForm TItem="Merchant" Data="@objMerchant" Submit=@OnFormSubmit>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Edit - Merchant / Agent Information</h4>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Merchant / Agent Name *" />
+                                    <RadzenTextBox Name="MerchantName" @bind-Value=@objMerchant.MerchantName MaxLength="50" class="form-control" />
+                                    <RadzenRequiredValidator Component="MerchantName" Text="Merchant Name is Required" />
+                                    <RadzenLengthValidator Component="MerchantName" Min="3" Text="Merchant Name should be at least 3 Characters" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="API URL *" />
+                                    <RadzenTextBox Name="ApiUrl" @bind-Value=@objMerchant.ApiUrl Placeholder="API URL" MaxLength="1000" class="form-control" />
+                                    <RadzenRequiredValidator Component="ApiUrl" Text="API URL is required" />
+                                    <RadzenRegexValidator Component="ApiUrl" Text="API URL must be proper" Pattern="(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Preferred Bank *" />
+                                    <RadzenDropDown Name="BankName" Data=@listBank TextProperty="BankName" ValueProperty="BankId" @bind-Value="@((objMerchant.BankId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="BankName" Text="Select Bank" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Device Key *" />
+                                    <RadzenDropDown Name="DeviceKey" Data=@listDeviceKey TextProperty="DeviceKey" ValueProperty="DeviceId" @bind-Value="@((objMerchant.DeviceId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="DeviceKey" Text="Select Device Key" DefaultValue="0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Upper Merchant" />
+                                    <RadzenDropDown Name="UpperMerchant" Data=@listUpperMerchant TextProperty="MerchantName" ValueProperty="MerchantId" @bind-Value="@((objMerchant.UpperMerchant))" Placeholder="None" class="form-control" />
+                                    <RadzenRequiredValidator Component="UpperMerchant" Text="Select Upper Merchant" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Merchant Type *" />
+                                    <RadzenDropDown Name="MerchantType" Data="@listMerchantType" TextProperty="Name" ValueProperty="Name" @bind-Value="@((objMerchant.MerchantType))" class="form-control" />
+                                    <RadzenRequiredValidator Component="MerchantType" Text="Select Merchant Type" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Commission (in %) *" />
+                                    <RadzenNumeric Name="Commission" @bind-Value=@objMerchant.Commission ShowUpDown="false" class="form-control" />
+                                    <RadzenRequiredValidator Component="Commission" Text="Commission is Required" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Operation Mode *" />
+                                    <RadzenDropDown Name="OperationMode" Data="@listOperationMode" TextProperty="Name" ValueProperty="Name" @bind-Value="@((objMerchant.OperationMode))" Placeholder="-- Choose --" class="form-control" />
+                                    <RadzenRequiredValidator Component="OperationMode" Text="Select Operation Mode" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Status" />
+                                    <RadzenDropDown Name="Status" Data="@listRecordStatus" TextProperty="Status" ValueProperty="StatusId" @bind-Value="@((objMerchant.StatusId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="Status" Text="Select Status" DefaultValue="0" />
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Submit" Text="Submit" Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Button" Text="Back to Previous" Icon="refresh" ButtonStyle="ButtonStyle.Warning" Click=@(args => OnClick()) />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </RadzenTemplateForm>
+</div>
+
+@code {
+    [Parameter]
+    public int MerchantId { get; set; }
+    Merchant objMerchant = new();
+
+    IEnumerable<Bank>? listBank;
+    IEnumerable<Device>? listDeviceKey;
+    IEnumerable<Merchant>? listUpperMerchant;
+    IEnumerable<RecordStatus>? listRecordStatus;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    public class DropdownValue
+    {
+        public string? Name { get; set; }
+    }
+
+    List<object> listMerchantType = new List<object>()
+    {
+        new DropdownValue() { Name="Merchant" },
+        new DropdownValue() { Name="Agent" },
+    };
+
+    List<object> listOperationMode = new List<object>()
+    {
+        new DropdownValue() { Name="Testing" },
+        new DropdownValue() { Name="Production" },
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBank();
+        await LoadDeviceKey();
+        await LoadUpperMerchant();
+        await LoadRecordStatus();
+        objMerchant = await merchantService.SelectById(MerchantId);
+
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objMerchant.UpdatedBy = userAccount.UserId;
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await merchantService.Update(objMerchant);
+            if (result == true)
+            {
+                Navigation.NavigateTo("/merchant", false);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    async Task LoadBank()
+    {
+        listBank = await Task.Run(bankService.SelectActive);
+    }
+
+    async Task LoadDeviceKey()
+    {
+        listDeviceKey = await Task.Run(deviceService.SelectActive);
+    }
+
+    async Task LoadUpperMerchant()
+    {
+        listUpperMerchant = await Task.Run(merchantService.SelectActive);
+    }
+
+    protected async Task LoadRecordStatus()
+    {
+        listRecordStatus = await Task.Run(recordStatusService.SelectAll);
+    }
+
+    void OnClick()
+    {
+        Navigation.NavigateTo("/merchant", false);
+    }
+
+}

@@ -1,0 +1,19 @@
+{
+  "Version": 1,
+  "Hash": "hayflkc5/z5ej1ET6HOWCI+aIL2Q17TlNLL9m52r5GU=",
+  "Source": "PaymentAPI",
+  "BasePath": "_content/PaymentAPI",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "PaymentAPI\\wwwroot",
+      "Source": "PaymentAPI",
+      "ContentRoot": "D:\\1DPayment\\PaymentAPI\\wwwroot\\",
+      "BasePath": "_content/PaymentAPI",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": []
+}

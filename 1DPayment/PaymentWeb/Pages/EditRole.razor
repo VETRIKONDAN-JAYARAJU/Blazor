@@ -1,0 +1,91 @@
+﻿@page "/editrole/{RoleId:int}";
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject RoleService roleService;
+@inject RecordStatusService recordStatusService;
+
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+
+<RadzenContent class="remove-content">
+    <ChildContent>
+        <RadzenTemplateForm TItem="Role" Data="@objRole" Submit=@OnFormSubmit>
+            <div class="row">
+                <div class="form-group">
+                    <RadzenLabel Text="Role *" />
+                    <RadzenTextBox Name="RoleName" @bind-Value=@objRole.RoleName MaxLength="50" class="form-control" />
+                    <RadzenRequiredValidator Component="RoleName" Text="Role is Required" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Status" />
+                    <RadzenDropDown Name="Status" Data="@listRecordStatus" TextProperty="Status" ValueProperty="StatusId" @bind-Value="@((objRole.StatusId))" class="form-control" />
+                    <RadzenRequiredValidator Component="Status" Text="Select Status" DefaultValue="0" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col offset-sm-3 mt-3">
+                    <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Save" Icon="save" />
+                    <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Light" Text="Cancel" Icon="cancel" Click="@CancelButtonClick" class="ms-2" />
+                </div>
+            </div>
+        </RadzenTemplateForm>
+    </ChildContent>
+</RadzenContent>
+
+@code {
+    [Parameter]
+    public int RoleId { get; set; }
+    Role objRole = new();
+    IEnumerable<RecordStatus>? listRecordStatus;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRecordStatus();
+        objRole = await roleService.SelectById(RoleId);
+
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objRole.UpdatedBy = userAccount.UserId;
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await roleService.Update(objRole);
+            if (result == true)
+            {
+                Dialog.Close(true);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        await Task.Run(() => Dialog.Close());
+    }
+
+    protected async Task LoadRecordStatus()
+    {
+        listRecordStatus = await Task.Run(recordStatusService.SelectAll);
+        StateHasChanged();
+    }
+}

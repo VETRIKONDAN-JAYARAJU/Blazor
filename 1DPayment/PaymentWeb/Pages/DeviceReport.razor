@@ -1,0 +1,945 @@
+﻿@page "/devicereport"
+
+@inject ReportService reportService
+
+@inject NotificationService Notification
+
+@inject IJSRuntime iJSRuntime
+
+@using IronXL;
+
+@using iTextSharp.text;
+@using iTextSharp.text.pdf;
+@using iTextSharp.text.html.simpleparser;
+
+@using PaymentWeb.Reports;
+
+<PageTitle>Device Transaction Report</PageTitle>
+
+<div class="container-fluid">
+    <RadzenTemplateForm TItem="Device" Data="@objDevice" Submit=@OnFormSubmit>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Device Transaction Report</h4>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Device Type *" />
+                                    <RadzenDropDown Name="DeviceType" Data="@listDeviceType" Placeholder="-- Choose --" TextProperty="Name" ValueProperty="Name" @bind-Value="@((objDevice.DeviceType))" class="form-control" />
+                                    <RadzenRequiredValidator Component="DeviceType" Text="Select Device Type" DefaultValue="0" />
+                                </div>
+                            </div>
+
+@*                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Start Date" />
+                                    <RadzenDatePicker ShowTime="false" DateFormat="dd/MM/yyyy" @bind-Value=@startDate Min="DateTime.Today.AddDays(-364)" Max="DateTime.Today" class="form-control" />
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="End Date" />
+                                    <RadzenDatePicker ShowTime="false" DateFormat="dd/MM/yyyy" @bind-Value=@endDate Min="DateTime.Today.AddDays(-364)" Max="DateTime.Today" class="form-control" Change=@OnEndDateChange />
+                                </div>
+                            </div>*@
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Submit" Text="Submit" Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" />
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </RadzenTemplateForm>
+
+
+    <div hidden="@depositShow">
+        <RadzenDataGrid TItem="Deposit" Data="@depositData" Responsive="true" AllowPaging="true" PageSize="10" ColumnWidth="100%"
+                        PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true" AllowSorting="false" AllowFiltering="false">
+            <Columns>
+                <RadzenDataGridColumn TItem="Deposit" Property="DepositId" Title="DEPOSIT ID" />
+                <RadzenDataGridColumn TItem="Deposit" Property="MerchantName" Title="MERCHANT NAME" />
+                <RadzenDataGridColumn TItem="Deposit" Property="OrderCorrespondenceId" Title="ORDER COR.ID" />
+                <RadzenDataGridColumn TItem="Deposit" Property="MemberCorrespondenceId" Title="MEMBER COR.ID" />
+                <RadzenDataGridColumn TItem="Deposit" Property="ReferenceNo" Title="REFERENCE NO" />
+                <RadzenDataGridColumn TItem="Deposit" Property="PaymentType" Title="PAYMENT TYPE" />
+                <RadzenDataGridColumn TItem="Deposit" Property="BankName" Title="BANK" />
+                <RadzenDataGridColumn TItem="Deposit" Property="AccountNo" Title="BANK AC.NO" />
+                <RadzenDataGridColumn TItem="Deposit" Property="CurrencyCode" Title="CURRENCY" />
+                <RadzenDataGridColumn TItem="Deposit" Property="Amount" Title="AMOUNT" FormatString="{0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn TItem="Deposit" Property="ActualAmount" Title="ACTUAL AMOUNT" FormatString="{0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn TItem="Deposit" Property="EWalletName" Title="EWALLET NAME" />
+                <RadzenDataGridColumn TItem="Deposit" Property="QRCodeName" Title="QR CODE" />
+                <RadzenDataGridColumn TItem="Deposit" Property="TransactionCode" Title="TRANSACTION CODE" />
+                <RadzenDataGridColumn TItem="Deposit" Property="Status" Title="STATUS" />
+            </Columns>
+        </RadzenDataGrid>
+        <br />
+        <RadzenButton Text="Download PDF Report" ButtonStyle="ButtonStyle.Secondary" Click="@DepositExportToPdf" />
+        <br />
+        <br />
+    </div>
+
+
+    <div hidden="@payoutShow">
+        <RadzenDataGrid TItem="Payout" Data="@payoutData" Responsive="true" AllowPaging="true" PageSize="10" ColumnWidth="100%"
+                        PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true" AllowSorting="false" AllowFiltering="false">
+            <Columns>
+                <RadzenDataGridColumn TItem="Payout" Property="PayoutId" Title="PAYOUT ID" />
+                <RadzenDataGridColumn TItem="Payout" Property="MerchantName" Title="MERCHANT NAME" />
+                <RadzenDataGridColumn TItem="Payout" Property="BankName" Title="BANK" />
+                <RadzenDataGridColumn TItem="Payout" Property="AccountNo" Title="BANK AC.NO" />
+                <RadzenDataGridColumn TItem="Payout" Property="DeviceName" Title="DEVICE NAME" />
+                <RadzenDataGridColumn TItem="Payout" Property="OrderCorrespondenceId" Title="ORDER COR.ID" />
+                <RadzenDataGridColumn TItem="Payout" Property="MemberCorrespondenceId" Title="MEMBER COR.ID" />
+                <RadzenDataGridColumn TItem="Payout" Property="ReferenceNo" Title="REFERENCE NO" />
+                <RadzenDataGridColumn TItem="Payout" Property="PaymentType" Title="PAYMENT TYPE" />
+                <RadzenDataGridColumn TItem="Payout" Property="CurrencyCode" Title="CURRENCY" />
+                <RadzenDataGridColumn TItem="Payout" Property="TargetAccountNo" Title="TARGET AC.NO" />
+                <RadzenDataGridColumn TItem="Payout" Property="CustomerName" Title="CUSTOMER NAME" />
+                <RadzenDataGridColumn TItem="Payout" Property="Amount" Title="AMOUNT" FormatString="{0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn TItem="Payout" Property="ActualAmount" Title="ACTUAL AMOUNT" FormatString="{0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn TItem="Payout" Property="TransactionCode" Title="TRANSACTION CODE" />
+                <RadzenDataGridColumn TItem="Payout" Property="Status" Title="STATUS" />
+            </Columns>
+        </RadzenDataGrid>
+        <br />
+        <RadzenButton Text="Download PDF Report" ButtonStyle="ButtonStyle.Secondary" Click="@PayoutExportToPdf" />
+        <br />
+        <br />
+    </div>
+
+    <div hidden="@settlementShow">
+        <RadzenDataGrid TItem="Settlement" Data="@settlementData" Responsive="true" AllowPaging="true" PageSize="10" ColumnWidth="100%"
+                        PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true" AllowSorting="false" AllowFiltering="false">
+            <Columns>
+                <RadzenDataGridColumn TItem="Settlement" Property="SettlementId" Title="SETTLEMENT ID" />
+                <RadzenDataGridColumn TItem="Settlement" Property="MerchantName" Title="DESTINATION MERCHANT NAME" />
+                <RadzenDataGridColumn TItem="Settlement" Property="BankName" Title="DESTINATION BANK" />
+                <RadzenDataGridColumn TItem="Settlement" Property="AccountNo" Title="DESTINATION BANK AC.NO" />
+                <RadzenDataGridColumn TItem="Settlement" Property="SourceMerchantName" Title="SOURCE MERCHANT NAME" />
+                <RadzenDataGridColumn TItem="Settlement" Property="SourceBankName" Title="SOURCE BANK" />
+                <RadzenDataGridColumn TItem="Settlement" Property="SourceAccountNo" Title="SOURCE BANK AC.NO" />
+                <RadzenDataGridColumn TItem="Settlement" Property="CurrencyCode" Title="CURRENCY" />
+                <RadzenDataGridColumn TItem="Settlement" Property="Amount" Title="AMOUNT" FormatString="{0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn TItem="Settlement" Property="ReferenceNo" Title="REFERENCE NO" />
+                <RadzenDataGridColumn TItem="Settlement" Property="Remarks" Title="REMARKS" />
+                <RadzenDataGridColumn TItem="Settlement" Property="TransactionCode" Title="TRANSACTION CODE" />
+                <RadzenDataGridColumn TItem="Settlement" Property="Status" Title="STATUS" />
+            </Columns>
+        </RadzenDataGrid>
+
+        <br />
+        <RadzenButton Text="Download PDF Report" ButtonStyle="ButtonStyle.Secondary" Click="@SettlementExportToPdf" />
+        <br />
+        <br />
+    </div>
+
+</div>
+
+@code {
+
+    private bool depositShow { get; set; } = true;
+    private bool payoutShow { get; set; } = true;
+    private bool settlementShow { get; set; } = true;
+
+    Device objDevice = new();
+    IEnumerable<Deposit>? depositData;
+    IEnumerable<Payout>? payoutData;
+    IEnumerable<Settlement>? settlementData;
+
+    DateTime? startDate = DateTime.Now;
+    DateTime? endDate = DateTime.Now;
+
+    Document _pdfDocument = new();
+    PdfWriter? _pdfWriter;
+    PdfPCell _pdfCell = new();
+    Font _fontNormal = new();
+    Font _fontBold = new();
+    Font _fontTitle = new();
+    MemoryStream _memoryStream = new();
+
+    public class DropdownValue
+    {
+        public string? Name { get; set; }
+        public int Id { get; set; }
+    }
+
+    List<object> listDeviceType = new List<object>()
+    {
+        new DropdownValue() { Name="Deposit", Id = 1 },
+        new DropdownValue() { Name="Payout", Id = 2 },
+        new DropdownValue() { Name="Settlement", Id = 3},
+    };
+
+    void OnEndDateChange(DateTime? endDate)
+    {
+        Console.WriteLine($"Value changed to {endDate}");
+    }
+
+
+    protected async Task OnFormSubmit()
+    {
+        var Type = objDevice.DeviceType;
+        switch (Type)
+        {
+            case "Deposit":
+                depositData = await Task.Run(reportService.DepositReport);
+                depositShow = false;
+                payoutShow = true;
+                settlementShow = true;
+                break;
+
+            case "Payout":
+                payoutData = await Task.Run(reportService.PayoutReport);
+                payoutShow = false;
+                depositShow = true;
+                settlementShow = true;
+                break;
+
+            case "Settlement":
+                settlementData = await Task.Run(reportService.SettlementReport);
+                settlementShow = false;
+                depositShow = true;
+                payoutShow = true;
+                break;
+
+            default:
+                settlementShow = true;
+                depositShow = true;
+                payoutShow = true;
+                Notification.Notify(NotificationSeverity.Warning, summary: "Value didn't match earlier");
+                break;
+        }
+
+    }
+
+    // EXPORT TO PDF SECTION
+
+    private void DepositExportToPdf()
+    {
+        GenerateDepositPdf(iJSRuntime);
+    }
+
+    private void GenerateDepositPdf(IJSRuntime iJSRuntime)
+    {
+        byte[] reportContents;
+
+        _pdfDocument = new Document(PageSize.A4.Rotate(), 40f, 40f, 40f, 40f);
+        _fontNormal = FontFactory.GetFont("ARIAL", 9f, 0);
+        _fontBold = FontFactory.GetFont("ARIAL", 10f, 0);
+        _fontTitle = FontFactory.GetFont("ARIAL", 16f, 0);
+
+        PdfPTable _pdfTable = new PdfPTable(15);
+        // _pdfTable.SetWidths(new[] { 30, 30, 40 });
+        _pdfTable.WidthPercentage = 100;
+
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.Gray;
+
+        _pdfWriter = PdfWriter.GetInstance(_pdfDocument, _memoryStream);
+
+        _pdfDocument.Open();
+
+        // Generate Header
+        _pdfDocument.Add(new Paragraph("Deposit Report", _fontTitle));
+        _pdfDocument.Add(new Paragraph("\n"));
+
+        _pdfCell = new PdfPCell(new Phrase("Deposit Id", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Merchant Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Order Cor.Id", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Member Cor.Id", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Reference No", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Payment Type", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Bank Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Account No", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Currency", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Amount", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Actual Amount", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("EWallet Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("QR Code", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Transaction Code", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Status", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfTable.CompleteRow();
+
+        // Generate Body
+        List<Deposit> _oDeposit = new List<Deposit>();
+        _oDeposit = reportService.DepositReport();
+
+        foreach (var item in _oDeposit)
+        {
+            _pdfCell = new PdfPCell(new Phrase(item.DepositId.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.MerchantName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.OrderCorrespondenceId, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.MemberCorrespondenceId, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.ReferenceNo, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.PaymentType, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.BankName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.AccountNo, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.CurrencyCode, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.Amount.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.ActualAmount.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.EWalletName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_LEFT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.QRCodeName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_LEFT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.TransactionCode, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_LEFT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.Status, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_LEFT;
+            _pdfTable.AddCell(_pdfCell);
+        }
+
+        // Generate Footer
+        _pdfDocument.Add(new Paragraph("\n"));
+        _pdfWriter.PageEvent = new PdfFooter();
+
+        _pdfDocument.Add(_pdfTable);
+
+        _pdfDocument.Close();
+
+        reportContents = _memoryStream.ToArray();
+
+        DateTime fileCreationDatetime = DateTime.Now;
+        var fileName = string.Format("{0}.pdf", fileCreationDatetime.ToString(@"yyyyMMdd") + "_" + fileCreationDatetime.ToString(@"HHmmss") + "_" + "DepositReport");
+
+        iJSRuntime.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(reportContents));
+    }
+
+    // Payout Report
+
+    private void PayoutExportToPdf()
+    {
+        GeneratePayoutPdf(iJSRuntime);
+    }
+
+    private void GeneratePayoutPdf(IJSRuntime iJSRuntime)
+    {
+        byte[] reportContents;
+
+        _pdfDocument = new Document(PageSize.A4.Rotate(), 40f, 40f, 40f, 40f);
+        _fontNormal = FontFactory.GetFont("ARIAL", 9f, 0);
+        _fontBold = FontFactory.GetFont("ARIAL", 10f, 0);
+        _fontTitle = FontFactory.GetFont("ARIAL", 16f, 0);
+
+        PdfPTable _pdfTable = new PdfPTable(16);
+        _pdfTable.WidthPercentage = 100;
+
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.Gray;
+
+        _pdfWriter = PdfWriter.GetInstance(_pdfDocument, _memoryStream);
+
+        _pdfDocument.Open();
+
+        // Generate Header
+        _pdfDocument.Add(new Paragraph("Payout Report", _fontTitle));
+        _pdfDocument.Add(new Paragraph("\n"));
+
+        _pdfCell = new PdfPCell(new Phrase("Payout Id", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Merchant Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Bank Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Account No", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Device Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Order Cor.Id", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Member Cor.Id", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Reference No", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Payment Type", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Currency", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Target A/C No", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Customer Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Amount", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Actual Amount", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Transaction Code", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Status", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfTable.CompleteRow();
+
+        // Generate Body
+        List<Payout> _oPayout = new List<Payout>();
+        _oPayout = reportService.PayoutReport();
+
+        foreach (var item in _oPayout)
+        {
+            _pdfCell = new PdfPCell(new Phrase(item.PayoutId.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.MerchantName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.BankName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.AccountNo, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.DeviceName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.OrderCorrespondenceId, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.MemberCorrespondenceId, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.ReferenceNo, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.PaymentType, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.CurrencyCode, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.TargetAccountNo, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_LEFT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.CustomerName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_LEFT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.Amount.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.ActualAmount.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.TransactionCode, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_LEFT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.Status, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_LEFT;
+            _pdfTable.AddCell(_pdfCell);
+        }
+
+        // Generate Footer
+        _pdfDocument.Add(new Paragraph("\n"));
+        _pdfWriter.PageEvent = new PdfFooter();
+
+        _pdfDocument.Add(_pdfTable);
+
+        _pdfDocument.Close();
+
+        reportContents = _memoryStream.ToArray();
+
+        DateTime fileCreationDatetime = DateTime.Now;
+        var fileName = string.Format("{0}.pdf", fileCreationDatetime.ToString(@"yyyyMMdd") + "_" + fileCreationDatetime.ToString(@"HHmmss") + "_" + "PayoutReport");
+      
+        iJSRuntime.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(reportContents));
+    }
+
+    // Settlement Report
+
+    private void SettlementExportToPdf()
+    {
+        GenerateSettlementPdf(iJSRuntime);
+    }
+
+    private void GenerateSettlementPdf(IJSRuntime iJSRuntime)
+    {
+        byte[] reportContents;
+
+        _pdfDocument = new Document(PageSize.A4.Rotate(), 40f, 40f, 40f, 40f);
+        _fontNormal = FontFactory.GetFont("ARIAL", 9f, 0);
+        _fontBold = FontFactory.GetFont("ARIAL", 10f, 0);
+        _fontTitle = FontFactory.GetFont("ARIAL", 16f, 0);
+
+        PdfPTable _pdfTable = new PdfPTable(13);
+        _pdfTable.WidthPercentage = 100;
+
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.Gray;
+
+        _pdfWriter = PdfWriter.GetInstance(_pdfDocument, _memoryStream);
+
+        _pdfDocument.Open();
+
+        // Generate Header
+        _pdfDocument.Add(new Paragraph("Settlement Report", _fontTitle));
+        _pdfDocument.Add(new Paragraph("\n"));
+
+        _pdfCell = new PdfPCell(new Phrase("Settlement Id", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Merchant Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Bank Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Account No", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Source Merchant Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Source Bank Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Source A/C No", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Currency", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Amount", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Reference No", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Remarks", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_LEFT;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Transaction Code", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Status", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfTable.CompleteRow();
+
+        // Generate Body
+        List<Settlement> _oSettlement = new List<Settlement>();
+        _oSettlement = reportService.SettlementReport();
+
+        foreach (var item in _oSettlement)
+        {
+            _pdfCell = new PdfPCell(new Phrase(item.SettlementId.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.MerchantName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.BankName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.AccountNo, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.SourceMerchantName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.SourceBankName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.SourceAccountNo, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.CurrencyCode, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.Amount.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.ReferenceNo, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.Remarks, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.TransactionCode, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.Status, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+        }
+
+        // Generate Footer
+        _pdfDocument.Add(new Paragraph("\n"));
+        _pdfWriter.PageEvent = new PdfFooter();
+
+        _pdfDocument.Add(_pdfTable);
+
+        _pdfDocument.Close();
+
+        reportContents = _memoryStream.ToArray();
+
+        DateTime fileCreationDatetime = DateTime.Now;
+        var fileName = string.Format("{0}.pdf", fileCreationDatetime.ToString(@"yyyyMMdd") + "_" + fileCreationDatetime.ToString(@"HHmmss") + "_" + "SettlementReport");
+
+        iJSRuntime.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(reportContents));
+    }
+
+}

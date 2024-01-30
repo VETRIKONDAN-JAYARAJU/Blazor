@@ -1,0 +1,214 @@
+﻿@page "/merchantbind";
+
+<PageTitle>Merchant Bind Information</PageTitle>
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject MerchantBindService merchantBindService;
+@inject MerchantService merchantService;
+@inject BankService bankService;
+@inject BankAccountService bankAccountService;
+
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+
+<div class="container-fluid">
+    <RadzenTemplateForm TItem="MerchantBind" Data="@objMerchantBind" Submit=@OnFormSubmit>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Add - Merchant Bind Information</h4>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Merchant / Agent *" />
+                                    <RadzenDropDown Name="MerchantName" Data=@listMerchant Placeholder="-- Choose --" TextProperty="MerchantName" ValueProperty="MerchantId" @bind-Value="@((objMerchantBind.MerchantId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="MerchantName" Text="Select Merchant / Agent" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Bank *" />
+                                    <RadzenDropDown Name="BankName" Data=@listBank Placeholder="-- Choose --" TextProperty="BankName" ValueProperty="BankId" @bind-Value="@((objMerchantBind.BankId))" class="form-control" Change="@BankOnChange" />
+                                    <RadzenRequiredValidator Component="BankName" Text="Select Bank" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Account No *" />
+                                    <RadzenDropDown Name="AccountNo" Data=@listBankAccount Placeholder="-- Choose --" TextProperty="AccountNo" ValueProperty="BankAccountId" @bind-Value="@((objMerchantBind.BankAccountId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="AccountNo" Text="Select Account No" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Submit" Text="Submit" Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" />
+                                        <RadzenButton ButtonType="ButtonType.Button" Text="Reset" Icon="refresh" ButtonStyle="ButtonStyle.Secondary" Click="Reset" class="ms-2" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </RadzenTemplateForm>
+
+
+    @* DataGrid Section Starts Here*@
+    @*------------------------------------------------------------------------------*@
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">View - Merchant Bind Information</h4>
+                </div>
+
+                <div class="card-body">
+                    <RadzenDataGrid Data="@modelData" TItem="MerchantBind" PageSize="10" AllowPaging="true" ShowPagingSummary="true" AllowSorting="true" AllowFiltering="true" PagerHorizontalAlign="HorizontalAlign.Left"
+                                    ColumnWidth="100%" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="MerchantBind" Property="MerchantBindId" Title="MERCHANT BIND ID" Frozen="true" Width="10%" Filterable="false" Visible="false" />
+                            <RadzenDataGridColumn TItem="MerchantBind" Property="MerchantName" Title="MERCHANT NAME" Width="20%" />
+                            <RadzenDataGridColumn TItem="MerchantBind" Property="BankName" Title="BANK NAME" Width="20%" />
+                            <RadzenDataGridColumn TItem="MerchantBind" Property="AccountNo" Title="BANK ACCOUNT NO" Width="20%" />
+                            <RadzenDataGridColumn TItem="MerchantBind" Property="Status" Title="STATUS" Width="20%" Filterable="false">
+                                <Template Context="data">
+                                    @if (@data.Status == "Active")
+                                    {
+                                        <span class="actives">@data.Status</span>
+                                    }
+                                    else if (@data.Status == "In Active")
+                                    {
+                                        <span class="inactive">@data.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="deleted">@data.Status</span>
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn TItem="MerchantBind" Filterable="false" Sortable="false" Width="20%" Title="ACTION" TextAlign="TextAlign.Center">
+                                <Template Context="actionRecord">
+                                    <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Click="@((args) =>GridEditButtonClick(args, actionRecord))" @onclick:stopPropagation="true" title="Edit" />
+                                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@((args) =>GridDeleteButtonClick(args, actionRecord))" @onclick:stopPropagation="true" title="Delete" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    MerchantBind objMerchantBind = new();
+
+    IEnumerable<MerchantBind>? modelData;
+    IEnumerable<Merchant>? listMerchant;
+    IEnumerable<Bank>? listBank;
+    IEnumerable<BankAccount>? listBankAccount;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objMerchantBind.CreatedBy = userAccount.UserId;
+        
+        await LoadMerchant();
+        await LoadBank();
+        await LoadDataGrid();
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await merchantBindService.Insert(objMerchantBind);
+            if (result == true)
+            {
+                await LoadDataGrid();
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Inserted Successfully");
+                Reset();
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task GridEditButtonClick(MouseEventArgs args, dynamic data)
+    {
+        var dialogResult = await Dialog.OpenAsync<EditMerchantBind>("Edit - Merchant Bind Information", new Dictionary<string, object>() { { "MerchantBindId", data.MerchantBindId }, { "BankId", data.BankId } });
+        if (Convert.ToBoolean(dialogResult) == true)
+        {
+            await LoadDataGrid();
+        }
+    }
+
+    protected async Task GridDeleteButtonClick(MouseEventArgs args, dynamic data)
+    {
+        try
+        {
+            if (await Dialog.Confirm("Are you sure you want to delete this record?", "Confirm", new ConfirmOptions() { OkButtonText = "Yes, Delete", CancelButtonText = "No, Cancel" }) == true)
+            {
+                var result = await merchantBindService.Delete(data.MerchantBindId);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Deleted Successfully");
+                await LoadDataGrid();
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task LoadDataGrid()
+    {
+        modelData = await Task.Run(merchantBindService.SelectAll);
+       // StateHasChanged();
+    }
+
+    async Task LoadMerchant()
+    {
+        listMerchant = await Task.Run(merchantService.SelectActive);
+    }
+
+    async Task LoadBank()
+    {
+        listBank = await Task.Run(bankService.SelectActive);
+    }
+
+    private void BankOnChange(object value)
+    {
+        objMerchantBind.BankAccountId = 0;
+        listBankAccount = bankAccountService.SelectBankAccountNo(Convert.ToInt32(value));
+    }
+
+    private void Reset()
+    {
+        objMerchantBind.BankAccountId = 0;
+        objMerchantBind = new MerchantBind { MerchantName = null, BankName = null, AccountNo = null };
+    }
+}

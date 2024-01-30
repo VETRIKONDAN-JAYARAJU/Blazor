@@ -1,0 +1,89 @@
+﻿@page "/viewmerchantinfo/{MerchantId:int}";
+
+<PageTitle>View Merchant Information</PageTitle>
+
+@inject FeeBindService feebindService;
+@inject DeviceBindService devicebindService;
+@inject NavigationManager Navigation;
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Fee Bind Information</h4>
+                </div>
+
+                <div class="card-body">
+                    <RadzenDataGrid Data="@fbModelData" TItem="FeeBind" PagerHorizontalAlign="HorizontalAlign.Left" ColumnWidth="100%">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="FeeBind" Property="MerchantName" Title="MERCHANT" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="PaymentType" Title="PAYMENT TYPE" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="CurrencyCode" Title="CURRENCY" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="FeeRate" Title="FEE RATE" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="FeeBindType" Title="FEEBIND TYPE" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="MinAmount" Title="MIN. AMOUNT" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="MaxAmount" Title="MAX. AMOUNT" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="LimitAmount" Title="LIMIT. AMOUNT" />
+                            <RadzenDataGridColumn TItem="FeeBind" Property="SourceMerchantName" Title="SOURCE MERCHANT" />
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Device Bind Information</h4>
+                </div>
+
+                <div class="card-body">
+                    <RadzenDataGrid Data="@dbModelData" TItem="DeviceBind" PagerHorizontalAlign="HorizontalAlign.Left" ColumnWidth="100%">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="DeviceBind" Property="MerchantName" Title="MERCHANT" />
+                            <RadzenDataGridColumn TItem="DeviceBind" Property="DeviceName" Title="DEVICE NAME" />
+                            <RadzenDataGridColumn TItem="DeviceBind" Property="BankName" Title="BANK NAME" />
+                            <RadzenDataGridColumn TItem="DeviceBind" Property="AccountNo" Title="ACCOUNT NO" />
+                            <RadzenDataGridColumn TItem="DeviceBind" Property="BotStatus" Title="BOT STATUS" />
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <RadzenButton ButtonType="ButtonType.Button" Text="Back to Previous" Icon="refresh" ButtonStyle="ButtonStyle.Warning" Click=@(args => OnClick()) />
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    [Parameter]
+    public int MerchantId { get; set; }
+
+    IEnumerable<FeeBind>? fbModelData;
+    IEnumerable<DeviceBind>? dbModelData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        fbModelData = await feebindService.SelectByMerchantId(MerchantId);
+        dbModelData = await devicebindService.SelectByMerchantId(MerchantId);
+    }
+
+    private void OnClick()
+    {
+        Navigation.NavigateTo("/merchant", false);
+    }
+
+}

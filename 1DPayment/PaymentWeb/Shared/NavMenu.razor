@@ -1,0 +1,93 @@
+﻿@using System.Security.Claims;
+
+@inject MenuService menuService;
+@inject UserMenuService userMenuService;
+@inject UserService userService;
+@inject NotificationService Notification;
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <div class="navbar-brand">1DPayments</div>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+
+    @if (listMenu != null)
+    {
+        <ul class="nav flex-column">
+            @foreach (var mn in listMenu)
+            {
+                <li class="nav nav-item px-3">
+                    <NavLink class="nav-link" href="@mn.PageName">
+                        <span class="@mn.IconName" aria-hidden="true"></span>@mn.MenuName
+                    </NavLink>
+                </li>
+            }
+        </ul>
+    }
+
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    IEnumerable<Menu>? listMenu;
+    UserMenu objUserMenu = new();
+
+    [Parameter]
+    public int[]? arrayMenuIds { get; set; }
+
+    [Parameter]
+    public string? userEmail { get; set; }
+
+    [Parameter]
+    public string? userRole { get; set; }
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthState!).User;
+
+        if (user != null)
+        {
+            userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+            userRole = user.Claims.Where(c => c.Type == ClaimTypes.Role).Select(x => x.Value).FirstOrDefault();
+
+            if (userEmail != null)
+            {
+                var userAccount = userService.GetbyUsername(userEmail);
+                var roleId = (userAccount == null) ? 0 : userAccount.RoleId;
+                objUserMenu = await userMenuService.SelectByRoleId(roleId);
+
+                arrayMenuIds = Array.ConvertAll(objUserMenu.MenuIds.Split(','), int.Parse);
+
+                if (arrayMenuIds != null)
+                {
+                    listMenu = menuService.GetMenus(arrayMenuIds);
+                    StateHasChanged();
+                }
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Error, summary: "Invalid Login Details");
+            }
+        }
+        else 
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: "Invalid Login Password");
+        }
+    }
+}

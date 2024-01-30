@@ -1,0 +1,264 @@
+﻿@page "/addsettlement";
+
+<PageTitle>Add Settlement Information</PageTitle>
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject MerchantBindService merchantBindService;
+@inject BankAccountService bankAccountService;
+@inject CurrencyService currencyService;
+@inject PaymentStatusService paymentStatusService;
+
+@inject NotificationService Notification;
+@inject NavigationManager Navigation;
+
+<div class="container-fluid">
+    <RadzenTemplateForm TItem="Settlement" Data="@objSettlement" Submit=@OnFormSubmit>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Add - Settlement Information</h4>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Destination Merchant / Agent *" />
+                                    <RadzenDropDown Name="MerchantName" Data=@listMerchantName Placeholder="-- Choose --" TextProperty="MerchantName" ValueProperty="MerchantId" @bind-Value="@((objSettlement.MerchantId))" class="form-control" Change="@MerchantOnChange" />
+                                    <RadzenRequiredValidator Component="MerchantName" Text="Select Merchant / Agent" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Destination Bank *" />
+                                    <RadzenDropDown Name="BankName" Data=@listMerchantBank Placeholder="-- Choose --" TextProperty="BankName" ValueProperty="BankId" @bind-Value="@((objSettlement.BankId))" class="form-control" Change="@BankOnChange" />
+                                    <RadzenRequiredValidator Component="BankName" Text="Select Bank" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Destination Account No *" />
+                                    <RadzenDropDown Name="AccountNo" Data=@listBankAccountNo Placeholder="-- Choose --" TextProperty="AccountNo" ValueProperty="BankAccountId" @bind-Value="@((objSettlement.BankAccountId))" class="form-control" Change="@AccountNumberOnChange" />
+                                    <RadzenRequiredValidator Component="AccountNo" Text="Select Account No" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Name *" />
+                                    <RadzenTextBox Name="Name" @bind-Value=@objSettlement.Name MaxLength="30" class="form-control" ReadOnly />
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Nick Name *" />
+                                    <RadzenTextBox Name="NickName" @bind-Value=@objSettlement.NickName MaxLength="30" class="form-control" ReadOnly />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Source Merchant / Agent *" />
+                                    <RadzenDropDown Name="SourceMerchantName" Data=@listSourceMerchantName Placeholder="-- Choose --" TextProperty="MerchantName" ValueProperty="MerchantId" @bind-Value="@((objSettlement.SourceMerchantId))" class="form-control" Change="@SourceMerchantOnChange" />
+                                    <RadzenRequiredValidator Component="SourceMerchantName" Text="Select Source Merchant / Agent" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Source Bank *" />
+                                    <RadzenDropDown Name="SourceBankName" Data=@listSourceMerchantBank Placeholder="-- Choose --" TextProperty="BankName" ValueProperty="BankId" @bind-Value="@((objSettlement.SourceBankId))" class="form-control" Change="@SourceBankOnChange" />
+                                    <RadzenRequiredValidator Component="SourceBankName" Text="Select Source Bank" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Source Account No *" />
+                                    <RadzenDropDown Name="SourceAccountNo" Data=@listSourceBankAccountNo Placeholder="-- Choose --" TextProperty="AccountNo" ValueProperty="BankAccountId" @bind-Value="@((objSettlement.SourceBankAccountId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="SourceAccountNo" Text="Select Source Account No" DefaultValue="0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Currency *" />
+                                    <RadzenDropDown Name="CurrencyName" Data=@listCurrency Placeholder="-- Choose --" TextProperty="CurrencyName" ValueProperty="CurrencyCode" @bind-Value="@((objSettlement.CurrencyCode))" class="form-control" />
+                                    <RadzenRequiredValidator Component="CurrencyName" Text="Select Currency" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Amount *" />
+                                    <RadzenNumeric Name="Amount" @bind-Value=@objSettlement.Amount Min="1" Max="999999" ShowUpDown="false" class="form-control" />
+                                    <RadzenRequiredValidator Component="Amount" Text="Amount is Required" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Reference No" />
+                                    <RadzenTextBox Name="ReferenceNo" @bind-Value=@objSettlement.ReferenceNo MaxLength="250" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Remarks" />
+                                    <RadzenTextBox Name="Remarks" @bind-Value=@objSettlement.Remarks MaxLength="250" class="form-control" />
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Status *" />
+                                    <RadzenDropDown Name="Status" Data="@listPaymentStatus" Placeholder="-- Choose --" TextProperty="Status" ValueProperty="StatusId" @bind-Value="@((objSettlement.StatusId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="Status" Text="Select Status" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Submit" Text="Submit" Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" />
+                                        <RadzenButton ButtonType="ButtonType.Button" Text="Reset" Icon="refresh" ButtonStyle="ButtonStyle.Secondary" Click="Reset" class="ms-2" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </RadzenTemplateForm>
+
+</div>
+
+@code {
+    Settlement objSettlement = new();
+
+    IEnumerable<MerchantBind>? listMerchantName;
+    IEnumerable<MerchantBind>? listMerchantBank;
+    IEnumerable<MerchantBind>? listBankAccountNo;
+
+    IEnumerable<MerchantBind>? listSourceMerchantName;
+    IEnumerable<MerchantBind>? listSourceMerchantBank;
+    IEnumerable<MerchantBind>? listSourceBankAccountNo;
+
+    IEnumerable<Currency>? listCurrency;
+    IEnumerable<PaymentStatus>? listPaymentStatus;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objSettlement.CreatedBy = userAccount.UserId;
+
+        await LoadMerchant();
+        await LoadCurrency();
+        await LoadPaymentStatus();
+    }
+
+    async Task OnFormSubmit()
+    {
+        var httpClientHandler = new HttpClientHandler();
+        httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+
+        using (var client = new HttpClient(httpClientHandler))
+        {
+            try
+            {
+               // await client.PostAsJsonAsync("https://localhost:7245/api/settlement/add", objSettlement);
+                  await client.PostAsJsonAsync("http://164.68.109.104:8080/api/settlement/add", objSettlement);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Added Successfully");
+                Navigation.NavigateTo("/viewsettlement");
+            }
+            catch (Exception ex)
+            {
+                Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+            }
+        }
+    }
+
+    async Task LoadMerchant()
+    {
+        listMerchantName = await Task.Run(merchantBindService.SelectMerchantName);
+        listSourceMerchantName = await Task.Run(merchantBindService.SelectMerchantName);
+    }
+
+    private void MerchantOnChange(object value)
+    {
+        objSettlement.MerchantId = Convert.ToInt32(value);
+        objSettlement.BankId = 0;
+        objSettlement.BankAccountId = 0;
+        objSettlement.Name = string.Empty;
+        objSettlement.NickName = string.Empty;
+        listMerchantBank = merchantBindService.SelectMerchantBankName(Convert.ToInt32(value));
+    }
+
+    private void BankOnChange(object value)
+    {
+        listBankAccountNo = merchantBindService.SelectMerchantBankAccountNo(objSettlement.MerchantId, Convert.ToInt32(value));
+    }
+
+    private void AccountNumberOnChange(object value)
+    {
+        var result = bankAccountService.SelectNickName(Convert.ToInt32(value));
+        objSettlement.Name = result[0].Name;
+        objSettlement.NickName = result[0].NickName;
+    }
+
+    private void SourceMerchantOnChange(object value)
+    {
+        objSettlement.SourceMerchantId = Convert.ToInt32(value);
+        objSettlement.SourceBankId = 0;
+        objSettlement.SourceBankAccountId = 0;
+        listSourceMerchantBank = merchantBindService.SelectMerchantBankName(Convert.ToInt32(value));
+    }
+
+    private void SourceBankOnChange(object value)
+    {
+        listSourceBankAccountNo = merchantBindService.SelectMerchantBankAccountNo(objSettlement.SourceMerchantId, Convert.ToInt32(value));
+    }
+
+    async Task LoadCurrency()
+    {
+        listCurrency = await Task.Run(currencyService.SelectActive);
+    }
+
+    protected async Task LoadPaymentStatus()
+    {
+        listPaymentStatus = await Task.Run(paymentStatusService.SelectAll);
+    }
+
+    private void Reset()
+    {
+        objSettlement.BankId = 0;
+        objSettlement.BankAccountId = 0;
+        objSettlement = new Settlement { MerchantName = null, BankName = null, AccountNo = null, Name = string.Empty, NickName = string.Empty, Amount = null };
+    }
+}

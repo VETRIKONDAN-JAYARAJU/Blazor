@@ -1,0 +1,98 @@
+﻿@page "/editmenu/{MenuId:int}";
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject MenuService menuService;
+
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+
+<RadzenContent class="remove-content">
+    <ChildContent>
+        <RadzenTemplateForm TItem="Menu" Data="@objMenu" Submit=@OnFormSubmit>
+            <div class="row">
+                <div class="form-group">
+                    <RadzenLabel Text="Menu Name *" />
+                    <RadzenTextBox Name="MenuName" @bind-Value=@objMenu.MenuName MaxLength="30" class="form-control" />
+                    <RadzenRequiredValidator Component="MenuName" Text="Menu Name is Required" />
+                    <RadzenLengthValidator Component="MenuName" Min="3" Text="Menu Name should be at least 3 characters" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Page Name *" />
+                    <RadzenTextBox Name="PageName" @bind-Value=@objMenu.PageName MaxLength="30" class="form-control" />
+                    <RadzenRequiredValidator Component="PageName" Text="Page Name is Required" />
+                    <RadzenLengthValidator Component="PageName" Min="3" Text="Page Name should be at least 3 characters" />
+                    <RadzenRegexValidator Component="PageName" Text="Page Name without any Space" Pattern="\S+" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Icon Name *" />
+                    <RadzenTextBox Name="IconName" @bind-Value=@objMenu.IconName MaxLength="30" class="form-control" />
+                    <RadzenRequiredValidator Component="IconName" Text="Icon Name is Required" />
+                </div>
+
+
+                <div class="form-group">
+                    <RadzenLabel Text="Menu Status *" /><br />
+                    <RadzenCheckBox @bind-Value=@objMenu.MenuStatus Name="MenuStatus" TValue="bool" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col offset-sm-3 mt-3">
+                    <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Save" Icon="save" />
+                    <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Light" Text="Cancel" Icon="cancel" Click="@CancelButtonClick" class="ms-2" />
+                </div>
+            </div>
+        </RadzenTemplateForm>
+    </ChildContent>
+</RadzenContent>
+
+@code {
+    [Parameter]
+    public int MenuId { get; set; }
+    Menu objMenu = new();
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        objMenu = await menuService.SelectById(MenuId);
+
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objMenu.UpdatedBy = userAccount.UserId;
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await menuService.Update(objMenu);
+            if (result == true)
+            {
+                Dialog.Close(true);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        await Task.Run(() => Dialog.Close());
+
+    }
+}

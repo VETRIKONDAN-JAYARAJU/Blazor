@@ -1,0 +1,273 @@
+﻿@page "/revenuereport"
+
+@inject ReportService reportService
+
+@inject NotificationService Notification
+
+@inject IJSRuntime iJSRuntime
+
+@using iTextSharp.text;
+@using iTextSharp.text.pdf;
+@using iTextSharp.text.html.simpleparser;
+
+@using iTextSharp.text.html;
+@using iTextSharp.text.xml.simpleparser;
+@using iTextSharp.text.xml;
+
+@using PaymentWeb.Reports;
+
+<h3>Device Revenue / Expenditure Report</h3>
+
+<div class="container-fluid">
+    <RadzenButton Text="Download PDF Report" ButtonStyle="ButtonStyle.Secondary" Click="@ExportToPdf" />
+</div>
+
+@code {
+    Document _pdfDocument = new();
+    PdfWriter? _pdfWriter;
+    PdfPTable _pdfTable = new PdfPTable(15);
+    PdfPCell _pdfCell = new();
+    Font _fontNormal = new();
+    Font _fontBold = new();
+    Font _fontTitle = new();
+    MemoryStream _memoryStream = new();
+
+    private void ExportToPdf()
+    {
+        GeneratePdf(iJSRuntime);
+    }
+
+    private void GeneratePdf(IJSRuntime iJSRuntime)
+    {
+        byte[] reportContents;
+
+        _pdfDocument = new Document(PageSize.A4.Rotate(), 40f, 40f, 40f, 40f);
+        _fontNormal = FontFactory.GetFont("ARIAL", 9f, 0);
+        _fontBold = FontFactory.GetFont("ARIAL", 10f, 0);
+        _fontTitle = FontFactory.GetFont("ARIAL", 16f, 0);
+
+        PdfPTable _pdfTable = new PdfPTable(15);
+        // _pdfTable.SetWidths(new[] { 30, 30, 40 });
+        _pdfTable.WidthPercentage = 100;
+
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.Gray;
+
+        _pdfWriter = PdfWriter.GetInstance(_pdfDocument, _memoryStream);
+
+        _pdfDocument.Open();
+
+        // Generate Header
+        _pdfDocument.Add(new Paragraph("Revenue Report", _fontTitle));
+        _pdfDocument.Add(new Paragraph("\n"));
+
+        _pdfCell = new PdfPCell(new Phrase("Deposit Id", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Merchant Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Order Cor.Id", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Member Cor.Id", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Reference No", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Payment Type", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Bank Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Account No", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Currency", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Amount", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Actual Amount", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("EWallet Name", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("QR Code", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Transaction Code", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfCell = new PdfPCell(new Phrase("Status", _fontBold));
+        _pdfCell.MinimumHeight = 30f;
+        _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+        _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+        _pdfCell.BackgroundColor = BaseColor.LightGray;
+        _pdfTable.AddCell(_pdfCell);
+
+        _pdfTable.CompleteRow();
+
+        // Generate Body
+        List<Deposit> _oDeposit = new List<Deposit>();
+        _oDeposit = reportService.DepositReport();
+
+        foreach (var item in _oDeposit)
+        {
+            _pdfCell = new PdfPCell(new Phrase(item.DepositId.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.MerchantName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.OrderCorrespondenceId, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.MemberCorrespondenceId, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.ReferenceNo, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.PaymentType, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.BankName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.AccountNo, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.CurrencyCode, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.Amount.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_CENTER;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.ActualAmount.ToString(), _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.EWalletName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.QRCodeName, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.TransactionCode, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+
+            _pdfCell = new PdfPCell(new Phrase(item.Status, _fontNormal));
+            _pdfCell.MinimumHeight = 25;
+            _pdfCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            _pdfTable.AddCell(_pdfCell);
+        }
+
+        // Generate Footer
+        _pdfDocument.Add(new Paragraph("\n"));
+        _pdfWriter.PageEvent = new PdfFooter();
+
+        _pdfDocument.Add(_pdfTable);
+
+        _pdfDocument.Close();
+
+        reportContents = _memoryStream.ToArray();
+
+        DateTime fileCreationDatetime = DateTime.Now;
+        var fileName = string.Format("{0}.pdf", fileCreationDatetime.ToString(@"yyyyMMdd") + "_" + fileCreationDatetime.ToString(@"HHmmss") + "_" + "RevenueReport");
+
+        iJSRuntime.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(reportContents));
+    }
+
+}

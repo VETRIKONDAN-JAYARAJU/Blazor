@@ -1,0 +1,261 @@
+is_global = true
+build_property.TargetFramework = net6.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = PaymentWeb
+build_property.RootNamespace = PaymentWeb
+build_property.ProjectDir = D:\1DPayment\PaymentWeb\
+build_property.RazorLangVersion = 6.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = D:\1DPayment\PaymentWeb
+build_property._RazorSourceGeneratorDebug = 
+
+[D:/1DPayment/PaymentWeb/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddBank.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkQmFuay5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddBankAccount.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkQmFua0FjY291bnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddCurrency.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkQ3VycmVuY3kucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddDeposit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkRGVwb3NpdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddDevice.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkRGV2aWNlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddDeviceBind.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkRGV2aWNlQmluZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddEWallet.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkRVdhbGxldC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddFeeBind.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkRmVlQmluZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkTWVudS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddMerchant.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkTWVyY2hhbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddMerchantBind.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkTWVyY2hhbnRCaW5kLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddPaymentStatus.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkUGF5bWVudFN0YXR1cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddPaymentType.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkUGF5bWVudFR5cGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddPayout.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkUGF5b3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddQRCode.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkUVJDb2RlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddRecordStatus.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkUmVjb3JkU3RhdHVzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddRole.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkUm9sZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddSettlement.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkU2V0dGxlbWVudC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddUser.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkVXNlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/AddUserMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkVXNlck1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/Dashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGFzaGJvYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/DeviceReport.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGV2aWNlUmVwb3J0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditBank.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdEJhbmsucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditBankAccount.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdEJhbmtBY2NvdW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditCurrency.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdEN1cnJlbmN5LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditDeposit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdERlcG9zaXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditDevice.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdERldmljZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditDeviceBind.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdERldmljZUJpbmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditEWallet.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdEVXYWxsZXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditFeeBind.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdEZlZUJpbmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdE1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditMerchant.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdE1lcmNoYW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditMerchantBind.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdE1lcmNoYW50QmluZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditPaymentStatus.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdFBheW1lbnRTdGF0dXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditPaymentType.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdFBheW1lbnRUeXBlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditPayout.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdFBheW91dC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditQRCode.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdFFSQ29kZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditRecordStatus.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdFJlY29yZFN0YXR1cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditRole.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdFJvbGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditSettlement.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdFNldHRsZW1lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/EditUser.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdFVzZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/FeesReport.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmVlc1JlcG9ydC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/Logout.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9nb3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/MerchantBalance.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWVyY2hhbnRCYWxhbmNlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/RevenueReport.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmV2ZW51ZVJlcG9ydC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/ViewCommission.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlld0NvbW1pc3Npb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/ViewDeposit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlld0RlcG9zaXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/ViewMerchantInfo.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlld01lcmNoYW50SW5mby5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/ViewPayout.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlld1BheW91dC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/ViewSettlement.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlld1NldHRsZW1lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Shared/LoadingScreen.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXExvYWRpbmdTY3JlZW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Shared/PublicLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFB1YmxpY0xheW91dC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Shared/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-rg5s3rnw5y
+
+[D:/1DPayment/PaymentWeb/Shared/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE5hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-7ko93mxcei
+
+[D:/1DPayment/PaymentWeb/Pages/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXJyb3IuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/_Host.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0hvc3QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/1DPayment/PaymentWeb/Pages/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0xheW91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 

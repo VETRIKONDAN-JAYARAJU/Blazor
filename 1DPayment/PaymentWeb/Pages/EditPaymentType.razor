@@ -1,0 +1,92 @@
+﻿@page "/editpaymenttype/{PaymentTypeId:int}";
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject PaymentMethodService paymentMethodService;
+@inject RecordStatusService recordStatusService;
+
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+
+<RadzenContent class="remove-content">
+    <ChildContent>
+        <RadzenTemplateForm TItem="PaymentMethod" Data="@objPaymentMethod" Submit=@OnFormSubmit>
+            <div class="row">
+                <div class="form-group">
+                    <RadzenLabel Text="Payment Type *" />
+                    <RadzenTextBox Name="PaymentType" @bind-Value=@objPaymentMethod.PaymentType MaxLength="20" class="form-control" />
+                    <RadzenRequiredValidator Component="PaymentType" Text="Payment Type is Required" />
+                    <RadzenLengthValidator Component="PaymentType" Min="5" Text="Payment Type should be at least 5 Characters" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Status *" />
+                    <RadzenDropDown Name="Status" Data="@listRecordStatus" TextProperty="Status" ValueProperty="StatusId" @bind-Value="@((objPaymentMethod.StatusId))" class="form-control" />
+                    <RadzenRequiredValidator Component="Status" Text="Select Status" DefaultValue="0" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col offset-sm-3 mt-3">
+                    <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Save" Icon="save" />
+                    <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Light" Text="Cancel" Icon="cancel" Click="@CancelButtonClick" class="ms-2" />
+                </div>
+            </div>
+        </RadzenTemplateForm>
+    </ChildContent>
+</RadzenContent>
+
+@code {
+    [Parameter]
+    public int PaymentTypeId { get; set; }
+    PaymentMethod objPaymentMethod = new();
+    IEnumerable<RecordStatus>? listRecordStatus;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRecordStatus();
+        objPaymentMethod = await paymentMethodService.SelectById(PaymentTypeId);
+
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objPaymentMethod.UpdatedBy = userAccount.UserId;
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await paymentMethodService.Update(objPaymentMethod);
+            if (result == true)
+            {
+                Dialog.Close(true);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        await Task.Run(() => Dialog.Close());
+    }
+
+    protected async Task LoadRecordStatus()
+    {
+        listRecordStatus = await Task.Run(recordStatusService.SelectAll);
+        StateHasChanged();
+    }
+}

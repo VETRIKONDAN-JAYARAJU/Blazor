@@ -1,0 +1,132 @@
+﻿@page "/editdevice/{DeviceId:int}";
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject DeviceService deviceService;
+@inject RecordStatusService recordStatusService;
+
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+
+<RadzenContent class="remove-content">
+    <ChildContent>
+        <RadzenTemplateForm TItem="Device" Data="@objDevice" Submit=@OnFormSubmit>
+            <div class="row">
+                <div class="form-group">
+                    <RadzenLabel Text="Device Name *" />
+                    <RadzenTextBox Name="DeviceName" @bind-Value=@objDevice.DeviceName MaxLength="50" class="form-control" />
+                    <RadzenRequiredValidator Component="DeviceName" Text="Device Name is Required" />
+                    <RadzenLengthValidator Component="DeviceName" Min="5" Text="Device Name should be at least 5 Characters" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="UUID *" />
+                    <RadzenTextBox Name="UUID" @bind-Value=@objDevice.UUID MaxLength="50" oninput="this.value=this.value.toUpperCase()" class="form-control" />
+                    <RadzenRequiredValidator Component="UUID" Text="UUID is Required" />
+                    <RadzenLengthValidator Component="UUID" Min="5" Text="UUID should be at least 5 Characters" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="PUID *" />
+                    <RadzenTextBox Name="PUID" @bind-Value=@objDevice.PUID MaxLength="50" oninput="this.value=this.value.toUpperCase()" class="form-control" />
+                    <RadzenRequiredValidator Component="PUID" Text="PUID is Required" />
+                    <RadzenLengthValidator Component="PUID" Min="5" Text="PUID should be at least 5 Characters" />
+                </div>
+
+
+                <div class="form-group">
+                    <RadzenLabel Text="Device Key *" />
+                    <RadzenTextBox Name="DeviceKey" @bind-Value=@objDevice.DeviceKey MaxLength="50" oninput="this.value=this.value.toUpperCase()" class="form-control" />
+                    <RadzenRequiredValidator Component="DeviceKey" Text="Device Key is Required" />
+                    <RadzenLengthValidator Component="DeviceKey" Min="5" Text="Device Key should be at least 5 Characters" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Device Type *" />
+                    <RadzenDropDown Name="DeviceType" Data="@listDeviceType" Placeholder="-- Choose --" TextProperty="Name" ValueProperty="Name" @bind-Value="@((objDevice.DeviceType))" class="form-control" />
+                    <RadzenRequiredValidator Component="DeviceType" Text="Select Device Type" DefaultValue="0" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Status" />
+                    <RadzenDropDown Name="Status" Data="@listRecordStatus" TextProperty="Status" ValueProperty="StatusId" @bind-Value="@((objDevice.StatusId))" class="form-control" />
+                    <RadzenRequiredValidator Component="Status" Text="Select Status" DefaultValue="0" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col offset-sm-3 mt-3">
+                    <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Save" Icon="save" />
+                    <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Light" Text="Cancel" Icon="cancel" Click="@CancelButtonClick" class="ms-2" />
+                </div>
+            </div>
+        </RadzenTemplateForm>
+    </ChildContent>
+</RadzenContent>
+
+@code {
+    [Parameter]
+    public int DeviceId { get; set; }
+    Device objDevice = new();
+    IEnumerable<RecordStatus>? listRecordStatus;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    public class DropdownValue
+    {
+        public string? Name { get; set; }
+    }
+
+    List<object> listDeviceType = new List<object>()
+    {
+        new DropdownValue() { Name="Deposit" },
+        new DropdownValue() { Name="Payout" },
+        new DropdownValue() { Name="Settlement" },
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRecordStatus();
+        objDevice = await deviceService.SelectById(DeviceId);
+
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objDevice.UpdatedBy = userAccount.UserId;
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await deviceService.Update(objDevice);
+            if (result == true)
+            {
+                Dialog.Close(true);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        await Task.Run(() => Dialog.Close());
+    }
+
+    protected async Task LoadRecordStatus()
+    {
+        listRecordStatus = await Task.Run(recordStatusService.SelectAll);
+        StateHasChanged();
+    }
+}

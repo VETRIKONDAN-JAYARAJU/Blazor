@@ -1,0 +1,12 @@
+D:\1DPayment\DataObjects\bin\Release\net6.0\DataObjects.deps.json
+D:\1DPayment\DataObjects\bin\Release\net6.0\DataObjects.dll
+D:\1DPayment\DataObjects\bin\Release\net6.0\DataObjects.pdb
+D:\1DPayment\DataObjects\obj\Release\net6.0\DataObjects.csproj.AssemblyReference.cache
+D:\1DPayment\DataObjects\obj\Release\net6.0\DataObjects.GeneratedMSBuildEditorConfig.editorconfig
+D:\1DPayment\DataObjects\obj\Release\net6.0\DataObjects.AssemblyInfoInputs.cache
+D:\1DPayment\DataObjects\obj\Release\net6.0\DataObjects.AssemblyInfo.cs
+D:\1DPayment\DataObjects\obj\Release\net6.0\DataObjects.csproj.CoreCompileInputs.cache
+D:\1DPayment\DataObjects\obj\Release\net6.0\DataObjects.dll
+D:\1DPayment\DataObjects\obj\Release\net6.0\refint\DataObjects.dll
+D:\1DPayment\DataObjects\obj\Release\net6.0\DataObjects.pdb
+D:\1DPayment\DataObjects\obj\Release\net6.0\ref\DataObjects.dll

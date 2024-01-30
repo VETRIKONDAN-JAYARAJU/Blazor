@@ -1,0 +1,173 @@
+﻿@page "/bank";
+
+<PageTitle>Bank Information</PageTitle>
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject BankService bankService;
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+
+<div class="container-fluid">
+    <RadzenTemplateForm TItem="Bank" Data="@objBank" Submit=@OnFormSubmit>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Add - Bank Information</h4>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Bank Name *" />
+                                    <RadzenTextBox Name="BankName" @bind-Value=@objBank.BankName MaxLength="50" class="form-control" />
+                                    <RadzenRequiredValidator Component="BankName" Text="Bank Name is Required" />
+                                    <RadzenLengthValidator Component="BankName" Min="3" Text="Bank Name should be at least 3 characters" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Submit" Text="Submit" Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </RadzenTemplateForm>
+
+
+    @* DataGrid Section Starts Here*@
+    @*------------------------------------------------------------------------------*@
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">View - Bank Information</h4>
+                </div>
+
+                <div class="card-body">
+                    <RadzenDataGrid Data="@modelData" TItem="Bank" AllowPaging="true" PageSize="10" ShowPagingSummary="true" AllowSorting="true" AllowFiltering="true" PagerHorizontalAlign="HorizontalAlign.Left"
+                                    ColumnWidth="100%" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="Bank" Property="BankId" Title="BANK ID" Width="10%" Frozen="true" Filterable="false" />
+                            <RadzenDataGridColumn TItem="Bank" Property="BankName" Title="BANK NAME" Width="40%" />
+                            <RadzenDataGridColumn TItem="Bank" Property="Status" Title="STATUS" Width="30%" Filterable="false">
+                                <Template Context="data">
+                                    @if (@data.Status == "Active")
+                                    {
+                                        <span class="actives">@data.Status</span>
+                                    }
+                                    else if (@data.Status == "In Active")
+                                    {
+                                        <span class="inactive">@data.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="deleted">@data.Status</span>
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            @*                            <AuthorizeView Roles="Super Admin, Admin">
+                            <Authorized>*@
+                            <RadzenDataGridColumn TItem="Bank" Filterable="false" Sortable="false" Width="20%" Title="ACTION" TextAlign="TextAlign.Center">
+                                <Template Context="actionRecord">
+                                    <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Click="@((args) =>GridEditButtonClick(args, actionRecord))" @onclick:stopPropagation="true" title="Edit" />
+                                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@((args) =>GridDeleteButtonClick(args, actionRecord))" @onclick:stopPropagation="true" title="Delete" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                            @*                                </Authorized>
+                            </AuthorizeView>*@
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    Bank objBank = new();
+    IEnumerable<Bank>? modelData;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objBank.CreatedBy = userAccount.UserId;
+        await LoadDataGrid();
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await bankService.Insert(objBank);
+            if (result == true)
+            {
+                await LoadDataGrid();
+                Reset();
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Inserted Successfully");
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task GridEditButtonClick(MouseEventArgs args, dynamic data)
+    {
+        var dialogResult = await Dialog.OpenAsync<EditBank>("Edit - Bank Information", new Dictionary<string, object>() { { "BankId", data.BankId } });
+        if (Convert.ToBoolean(dialogResult) == true)
+        {
+            await LoadDataGrid();
+        }
+    }
+
+    protected async Task GridDeleteButtonClick(MouseEventArgs args, dynamic data)
+    {
+        try
+        {
+            if (await Dialog.Confirm("Are you sure you want to delete this record?", "Confirm", new ConfirmOptions() { OkButtonText = "Yes, Delete", CancelButtonText = "No, Cancel" }) == true)
+            {
+                var result = await bankService.Delete(data.BankId);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Deleted Successfully");
+                await LoadDataGrid();
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task LoadDataGrid()
+    {
+        modelData = await Task.Run(bankService.SelectAll);
+        StateHasChanged();
+    }
+
+    private void Reset()
+    {
+        objBank = new Bank { BankName = string.Empty };
+    }
+}

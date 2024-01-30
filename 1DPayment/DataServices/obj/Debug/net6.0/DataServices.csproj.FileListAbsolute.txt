@@ -1,0 +1,15 @@
+D:\1DPayment\DataServices\bin\Debug\net6.0\DataServices.deps.json
+D:\1DPayment\DataServices\bin\Debug\net6.0\DataServices.dll
+D:\1DPayment\DataServices\bin\Debug\net6.0\DataServices.pdb
+D:\1DPayment\DataServices\bin\Debug\net6.0\DataObjects.dll
+D:\1DPayment\DataServices\bin\Debug\net6.0\DataObjects.pdb
+D:\1DPayment\DataServices\obj\Debug\net6.0\DataServices.csproj.AssemblyReference.cache
+D:\1DPayment\DataServices\obj\Debug\net6.0\DataServices.GeneratedMSBuildEditorConfig.editorconfig
+D:\1DPayment\DataServices\obj\Debug\net6.0\DataServices.AssemblyInfoInputs.cache
+D:\1DPayment\DataServices\obj\Debug\net6.0\DataServices.AssemblyInfo.cs
+D:\1DPayment\DataServices\obj\Debug\net6.0\DataServices.csproj.CoreCompileInputs.cache
+D:\1DPayment\DataServices\obj\Debug\net6.0\DataServices.csproj.CopyComplete
+D:\1DPayment\DataServices\obj\Debug\net6.0\DataServices.dll
+D:\1DPayment\DataServices\obj\Debug\net6.0\refint\DataServices.dll
+D:\1DPayment\DataServices\obj\Debug\net6.0\DataServices.pdb
+D:\1DPayment\DataServices\obj\Debug\net6.0\ref\DataServices.dll

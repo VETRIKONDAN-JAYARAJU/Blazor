@@ -1,0 +1,124 @@
+﻿@page "/viewpayout";
+
+<PageTitle>View Payout Information</PageTitle>
+
+@inject NavigationManager Navigation;
+@inject NotificationService Notification;
+
+<style>
+.succes, .notprocess, .fail {
+    display: inline-block;
+    font-size: 0.8rem;
+    color: #fff;
+    padding: 0.02rem 0.5rem;
+    border-radius: 0.2rem;
+}
+
+.succes {
+    background-color: rgb(0, 155, 81);
+}
+
+.notprocess {
+    background-color: #adcdcf;
+}
+
+.fail {
+    background-color: #fa9c92;
+}
+</style>
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">View - Payout Information</h4>
+                </div>
+
+                <div class="card-body">
+                    <div style="width: calc(100vw - 350px);">
+                        <RadzenDataGrid Data="@modelData" TItem="Payout" PageSize="10" AllowPaging="true" ShowPagingSummary="true" AllowSorting="true" AllowFiltering="true" PagerHorizontalAlign="HorizontalAlign.Left"
+                                        ColumnWidth="150px" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="Payout" Property="PayoutId" Title="PAYOUT ID" Frozen="true" Filterable="false" />
+                                <RadzenDataGridColumn TItem="Payout" Property="MerchantName" Title="MERCHANT NAME" />
+                                <RadzenDataGridColumn TItem="Payout" Property="BankName" Title="BANK" />
+                                <RadzenDataGridColumn TItem="Payout" Property="AccountNo" Title="BANK AC.NO" />
+                                <RadzenDataGridColumn TItem="Payout" Property="DeviceName" Title="DEVICE NAME" />
+                                <RadzenDataGridColumn TItem="Payout" Property="OrderCorrespondenceId" Title="ORDER COR.ID" />
+                                <RadzenDataGridColumn TItem="Payout" Property="MemberCorrespondenceId" Title="MEMBER COR.ID" />
+                                <RadzenDataGridColumn TItem="Payout" Property="ReferenceNo" Title="REFERENCE NO" />
+                                <RadzenDataGridColumn TItem="Payout" Property="PaymentType" Title="PAYMENT TYPE" />
+                                <RadzenDataGridColumn TItem="Payout" Property="CurrencyCode" Title="CURRENCY" />
+                                <RadzenDataGridColumn TItem="Payout" Property="TargetAccountNo" Title="TARGET AC.NO" />
+                                <RadzenDataGridColumn TItem="Payout" Property="CustomerName" Title="CUSTOMER NAME" />
+                                <RadzenDataGridColumn TItem="Payout" Property="Amount" Title="AMOUNT" FormatString="{0:N2}" TextAlign="TextAlign.Right" Filterable="false" />
+                                <RadzenDataGridColumn TItem="Payout" Property="ActualAmount" Title="ACTUAL AMOUNT" FormatString="{0:N2}" TextAlign="TextAlign.Right" Filterable="false" />
+                                <RadzenDataGridColumn TItem="Payout" Property="TransactionCode" Title="TRANSACTION CODE" />
+                                <RadzenDataGridColumn TItem="Payout" Property="Status" Title="STATUS" Filterable="false">
+                                    <Template Context="data">
+                                        @if (@data.Status == "Success")
+                                        {
+                                            <span class="succes">Success</span>
+                                        }
+                                        else if (@data.Status == "Not Processed")
+                                        {
+                                            <span class="notprocess">Not Processed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fail">Failed</span>
+                                        }
+                                    </Template>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="Payout" Filterable="false" Sortable="false" Title="ACTION" TextAlign="TextAlign.Center">
+                                    <Template Context="actionRecord">
+                                        <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Click="@((args) =>GridEditButtonClick(args, actionRecord))" @onclick:stopPropagation="true" title="Edit" Disabled />
+                                    </Template>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    public IEnumerable<Payout>? modelData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetJsonData();
+    }
+
+    protected async Task GridEditButtonClick(MouseEventArgs args, dynamic data)
+    {
+        Navigation.NavigateTo($"editpayout/{data.PayoutId}/{data.MerchantId}/{data.BankId}", forceLoad: false);
+        await InvokeAsync(() => { StateHasChanged(); });
+    }
+
+    protected async Task GetJsonData()
+    {
+        // You should make this more robust by actually checking the certificate:
+        var httpClientHandler = new HttpClientHandler();
+        httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+
+        using (var client = new HttpClient(httpClientHandler))
+        {
+            try
+            {
+                modelData = await client.GetFromJsonAsync<List<Payout>>("https://localhost:7245/api/payout/get");
+           
+               //  modelData = await client.GetFromJsonAsync<List<Payout>>("http://164.68.109.104:8080/api/payout/get");
+            }
+            catch (Exception ex)
+            {
+                Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+            }
+        }
+    }
+}

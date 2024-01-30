@@ -1,0 +1,124 @@
+﻿@page "/viewsettlement";
+
+<PageTitle>View Settlement Information</PageTitle>
+
+@inject SettlementService settlementService;
+@inject NavigationManager Navigation;
+@inject NotificationService Notification;
+
+<style>
+    .sucess, .notproces, .fail {
+        display: inline-block;
+        font-size: 0.8rem;
+        color: #fff;
+        padding: 0.02rem 0.5rem;
+        border-radius: 0.2rem;
+    }
+
+    .sucess {
+        background-color: rgb(0, 155, 81);
+    }
+
+    .notproces {
+        background-color: #adcdcf;
+    }
+
+    .fail {
+        background-color: #fa9c92;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">View - Settlement Information</h4>
+                </div>
+
+                <div class="card-body">
+                    <div style="width: calc(100vw - 350px);">
+                        <RadzenDataGrid Data="@modelData" TItem="Settlement" PageSize="10" AllowPaging="true" ShowPagingSummary="true" AllowSorting="true" AllowFiltering="true" PagerHorizontalAlign="HorizontalAlign.Left"
+                                        ColumnWidth="150px" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="Settlement" Property="SettlementId" Title="SETTLEMENT ID" Frozen="true" Filterable="false" />
+                                <RadzenDataGridColumn TItem="Settlement" Property="MerchantName" Title="DESTINATION MERCHANT NAME" />
+                                <RadzenDataGridColumn TItem="Settlement" Property="BankName" Title="DESTINATION BANK" />
+                                <RadzenDataGridColumn TItem="Settlement" Property="AccountNo" Title="DESTINATION BANK AC.NO" />
+                                <RadzenDataGridColumn TItem="Settlement" Property="SourceMerchantName" Title="SOURCE MERCHANT NAME" />
+                                <RadzenDataGridColumn TItem="Settlement" Property="SourceBankName" Title="SOURCE BANK" />
+                                <RadzenDataGridColumn TItem="Settlement" Property="SourceAccountNo" Title="SOURCE BANK AC.NO" />
+                                <RadzenDataGridColumn TItem="Settlement" Property="CurrencyCode" Title="CURRENCY" />
+                                <RadzenDataGridColumn TItem="Settlement" Property="Amount" Title="AMOUNT" FormatString="{0:N2}" TextAlign="TextAlign.Right" Filterable="false" />
+                                <RadzenDataGridColumn TItem="Settlement" Property="ReferenceNo" Title="REFERENCE NO" />
+                                <RadzenDataGridColumn TItem="Settlement" Property="Remarks" Title="REMARKS" />
+                                <RadzenDataGridColumn TItem="Settlement" Property="TransactionCode" Title="TRANSACTION CODE" />
+                                <RadzenDataGridColumn TItem="Settlement" Property="Status" Title="STATUS" Filterable="false">
+                                    <Template Context="data">
+                                        @if (@data.Status == "Success")
+                                        {
+                                            <span class="sucess">@data.Status</span>
+                                        }
+                                        else if (@data.Status == "Not Processed")
+                                        {
+                                            <span class="notproces">@data.Status</span>
+                                        }
+                                        else if (@data.Status == "Failed")
+                                        {
+                                            <span class="fail">@data.Status</span>
+                                        }
+                                    </Template>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="Settlement" Filterable="false" Sortable="false" Title="ACTION" TextAlign="TextAlign.Center">
+                                    <Template Context="actionRecord">
+                                        <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Click="@((args) =>GridEditButtonClick(args, actionRecord))" @onclick:stopPropagation="true" title="Edit" Disabled />
+                                    </Template>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+    public IEnumerable<Settlement>? modelData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetJsonData();
+    }
+
+    protected async Task GridEditButtonClick(MouseEventArgs args, dynamic data)
+    {
+        Navigation.NavigateTo($"editsettlement/{data.SettlementId}/{data.MerchantId}/{data.BankId}", forceLoad: false);
+        await InvokeAsync(() => { StateHasChanged(); });
+    }
+
+    protected async Task GetJsonData()
+    {
+        // You should make this more robust by actually checking the certificate:
+        var httpClientHandler = new HttpClientHandler();
+        httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+
+        using (var client = new HttpClient(httpClientHandler))
+        {
+            try
+            {
+               //   modelData = await client.GetFromJsonAsync<List<Settlement>>("https://localhost:7245/api/settlement/get");
+
+                modelData = await client.GetFromJsonAsync<List<Settlement>>("http://164.68.109.104:8080/api/settlement/get");
+            }
+            catch (Exception ex)
+            {
+                Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+            }
+        }
+    }
+}
+

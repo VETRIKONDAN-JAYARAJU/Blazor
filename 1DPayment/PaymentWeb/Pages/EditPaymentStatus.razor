@@ -1,0 +1,64 @@
+﻿@page "/editpaymentstatus/{StatusId:int}";
+
+@inject PaymentStatusService paymentStatusService;
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+
+<RadzenContent class="remove-content">
+    <ChildContent>
+        <RadzenTemplateForm TItem="PaymentStatus" Data="@objPaymentStatus" Submit=@OnFormSubmit>
+            <div class="row">
+                <div class="form-group">
+                    <RadzenLabel Text="Payment Status *" />
+                    <RadzenTextBox Name="Status" @bind-Value=@objPaymentStatus.Status MaxLength="20" class="form-control" />
+                    <RadzenRequiredValidator Component="Status" Text="Status is Required" />
+                    <RadzenLengthValidator Component="Status" Min="5" Text="Status should be at least 5 characters" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col offset-sm-3 mt-3">
+                    <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Save" Icon="save" />
+                    <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Light" Text="Cancel" Icon="cancel" Click="@CancelButtonClick" class="ms-2" />
+                </div>
+            </div>
+        </RadzenTemplateForm>
+    </ChildContent>
+</RadzenContent>
+
+@code {
+    [Parameter]
+    public int StatusId { get; set; }
+    PaymentStatus objPaymentStatus = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        objPaymentStatus = await paymentStatusService.SelectById(StatusId);
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await paymentStatusService.Update(objPaymentStatus);
+            if (result == true)
+            {
+                Dialog.Close(true);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        await Task.Run(() => Dialog.Close());
+    }
+}

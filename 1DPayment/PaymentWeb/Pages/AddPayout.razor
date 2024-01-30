@@ -1,0 +1,248 @@
+﻿@page "/addpayout";
+
+<PageTitle>Add Payout Information</PageTitle>
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject MerchantBindService merchantBindService;
+@inject BankAccountService bankAccountService;
+@inject PaymentMethodService paymentMethodService;
+
+@inject CurrencyService currencyService;
+@inject PaymentStatusService paymentStatusService;
+
+@inject NotificationService Notification;
+@inject NavigationManager Navigation;
+
+<div class="container-fluid">
+    <RadzenTemplateForm TItem="Payout" Data="@objPayout" Submit=@OnFormSubmit>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Add - Payout Information</h4>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Merchant / Agent *" />
+                                    <RadzenDropDown Name="MerchantName" Data=@listMerchantName Placeholder="-- Choose --" TextProperty="MerchantName" ValueProperty="MerchantId" @bind-Value="@((objPayout.MerchantId))" class="form-control" Change="@MerchantOnChange" />
+                                    <RadzenRequiredValidator Component="MerchantName" Text="Select Merchant / Agent" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                         <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Bank *" />
+                                    <RadzenDropDown Name="BankName" Data=@listMerchantBank Placeholder="-- Choose --" TextProperty="BankName" ValueProperty="BankId" @bind-Value="@((objPayout.BankId))" class="form-control" Change="@BankOnChange" />
+                                    <RadzenRequiredValidator Component="BankName" Text="Select Bank" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Account No *" />
+                                    <RadzenDropDown Name="AccountNo" Data=@listBankAccountNo Placeholder="-- Choose --" TextProperty="AccountNo" ValueProperty="BankAccountId" @bind-Value="@((objPayout.BankAccountId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="AccountNo" Text="Select Account No" DefaultValue="0" />
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Member Correspondence Id *" />
+                                    <RadzenTextBox Name="MemberCorrespondenceId" @bind-Value=@objPayout.MemberCorrespondenceId MaxLength="20" class="form-control" />
+                                    <RadzenRequiredValidator Component="MemberCorrespondenceId" Text="Member Correspondence Id is required" />
+                                    <RadzenRegexValidator Component="MemberCorrespondenceId" Text="Member Correspondence Id must be Alphabets / Numbers" Pattern="[a-zA-Z0-9]*$" />
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Reference No" />
+                                    <RadzenTextBox Name="ReferenceNo" @bind-Value=@objPayout.ReferenceNo MaxLength="250" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Payment Type *" />
+                                    <RadzenDropDown Name="PaymentType" Data=@listPaymentType Placeholder="-- Choose --" TextProperty="PaymentType" ValueProperty="PaymentTypeId" @bind-Value="@((objPayout.PaymentTypeId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="PaymentType" Text="Select Payment Type" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Currency *" />
+                                    <RadzenDropDown Name="CurrencyName" Data=@listCurrency Placeholder="-- Choose --" TextProperty="CurrencyName" ValueProperty="CurrencyCode" @bind-Value="@((objPayout.CurrencyCode))" class="form-control" />
+                                    <RadzenRequiredValidator Component="CurrencyName" Text="Select Currency" DefaultValue="0" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Target Account No *" />
+                                    <RadzenTextBox Name="TargetAccountNo" @bind-Value=@objPayout.TargetAccountNo MaxLength="20" class="form-control" />
+                                    <RadzenRequiredValidator Component="TargetAccountNo" Text="Target Account No is Required" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Account Customer Name *" />
+                                    <RadzenTextBox Name="CustomerName" @bind-Value=@objPayout.CustomerName MaxLength="250" class="form-control" />
+                                    <RadzenRequiredValidator Component="CustomerName" Text="Customer Name is Required" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Amount *" />
+                                    <RadzenNumeric Name="Amount" @bind-Value=@objPayout.Amount Min="1" Max="999999" ShowUpDown="false" class="form-control" />
+                                    <RadzenRequiredValidator Component="Amount" Text="Amount is Required" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Actual Amount *" />
+                                    <RadzenNumeric Name="ActualAmount" @bind-Value=@objPayout.ActualAmount Min="1" Max="999999" ShowUpDown="false" class="form-control" />
+                                    <RadzenRequiredValidator Component="ActualAmount" Text="Actual Amount is Required" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Status *" />
+                                    <RadzenDropDown Name="Status" Data="@listPaymentStatus" Placeholder="-- Choose --" TextProperty="Status" ValueProperty="StatusId" @bind-Value="@((objPayout.StatusId))" class="form-control" />
+                                    <RadzenRequiredValidator Component="Status" Text="Select Status" DefaultValue="0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Submit" Text="Submit" Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Button" Text="Reset" Icon="refresh" ButtonStyle="ButtonStyle.Secondary" Click="Reset" />
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </RadzenTemplateForm>
+
+</div>
+
+@code {
+    Payout objPayout = new();
+
+    IEnumerable<MerchantBind>? listMerchantName;
+    IEnumerable<MerchantBind>? listMerchantBank;
+    IEnumerable<MerchantBind>? listBankAccountNo;
+    IEnumerable<PaymentMethod>? listPaymentType;
+    IEnumerable<Currency>? listCurrency;
+    IEnumerable<PaymentStatus>? listPaymentStatus;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objPayout.CreatedBy = userAccount.UserId;
+         
+        await LoadMerchant();
+        await LoadPaymentType();
+        await LoadCurrency();
+        await LoadPaymentStatus();
+    }
+
+    async Task OnFormSubmit()
+    {
+        var httpClientHandler = new HttpClientHandler();
+        httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+
+        using (var client = new HttpClient(httpClientHandler))
+        {
+            try
+            {
+              //   await client.PostAsJsonAsync("https://localhost:7245/api/payout/add", objPayout);
+
+               await client.PostAsJsonAsync("http://164.68.109.104:8080/api/payout/add", objPayout);
+
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Added Successfully");
+                Navigation.NavigateTo("/viewpayout");
+            }
+            catch (Exception ex)
+            {
+                Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+            }
+        }
+    }
+
+    async Task LoadMerchant()
+    {
+        listMerchantName = await Task.Run(merchantBindService.SelectMerchantName);
+    }
+
+    private void MerchantOnChange(object value)
+    {
+        objPayout.MerchantId = Convert.ToInt32(value);
+        objPayout.BankId = 0;
+        objPayout.BankAccountId = 0;
+        listMerchantBank = merchantBindService.SelectMerchantBankName(Convert.ToInt32(value));
+    }
+
+    private void BankOnChange(object value)
+    {
+        listBankAccountNo = merchantBindService.SelectMerchantBankAccountNo(objPayout.MerchantId, Convert.ToInt32(value));
+    }
+
+    async Task LoadPaymentType()
+    {
+        listPaymentType = await Task.Run(paymentMethodService.SelectIB);
+    }
+
+
+    async Task LoadCurrency()
+    {
+        listCurrency = await Task.Run(currencyService.SelectActive);
+    }
+
+    protected async Task LoadPaymentStatus()
+    {
+        listPaymentStatus = await Task.Run(paymentStatusService.SelectAll);
+    }
+
+    private void Reset()
+    {
+        objPayout = new Payout { MerchantName = null, MemberCorrespondenceId = string.Empty, Amount = null, ActualAmount = null, BankName = null, AccountNo = null };
+    }
+}

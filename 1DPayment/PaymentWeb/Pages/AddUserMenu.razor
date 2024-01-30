@@ -1,0 +1,157 @@
+﻿@page "/usermenu";
+
+<PageTitle>Manage User Menu Information</PageTitle>
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+@inject MenuService menuService;
+@inject UserMenuService userMenuService;
+
+@inject RoleService roleService;
+
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="card">
+            <div class="card-body">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-secondary">
+                            <span class="oi oi-cog me-2" aria-hidden="true"></span>
+                            <span class="text-nowrap font-weight-bold">Choose Your Preferred Role</span>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <RadzenLabel Text="Role *" />
+                            <RadzenDropDown Name="RoleName" Data=@listRole TextProperty="RoleName" ValueProperty="RoleId" @bind-Value="@((objUserMenu.RoleId))" Placeholder="-- Choose --" class="form-control" />
+                            <RadzenRequiredValidator Component="RoleName" Text="Select Role" DefaultValue="0" />
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-secondary">
+                            <span class="oi oi-list-rich me-2" aria-hidden="true"></span>
+                            <span class="text-nowrap font-weight-bold">Assign Modules (Menu)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            @if (listMenu != null)
+                            {
+                                <RadzenCheckBoxList Name="chklistbox" @bind-Value=@checkedMenuIds TValue="int" Orientation="Orientation.Vertical">
+                                    <Items>
+                                        @foreach (var item in listMenu)
+                                        {
+                                            <RadzenCheckBoxListItem Text="@item.MenuName" Value="@item.MenuId" />
+                                        }
+                                    </Items>
+                                </RadzenCheckBoxList>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="btn-vcenter">
+                                <RadzenButton ButtonType="ButtonType.Button" Text="Save User Menu Details" Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" Click=@OnSave />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+</div>
+@code {
+    User objUser = new();
+    UserMenu objUserMenu = new();
+
+    IEnumerable<Menu>? listMenu;
+    IEnumerable<Role>? listRole;
+    IEnumerable<int> checkedMenuIds = new int[] {1};
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objUserMenu.CreatedBy = userAccount.UserId;
+
+        await LoadRole();
+        await LoadMenus();
+    }
+
+    private async Task OnSave()
+    {
+        String inputMenuId = string.Join(",", checkedMenuIds);
+        objUserMenu.MenuIds = String.Join(",", inputMenuId.Split(',').Select(x => int.Parse(x)).OrderBy(x => x));
+
+        if (objUserMenu.RoleId < 1)
+        {
+            Notification.Notify(NotificationSeverity.Warning, summary: "Select Your Preferred Role");
+        }
+        else if (objUserMenu.MenuIds == string.Empty)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: "Select atleast One Module");
+        }
+        else
+        {
+            try
+            {
+                var result = await userMenuService.Insert(objUserMenu);
+                Reset();
+                if (result == true)
+                {
+                    Notification.Notify(NotificationSeverity.Success, summary: "Record Inserted Successfully");
+                }
+                else
+                {
+                    Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+                }
+            }
+            catch (Exception ex)
+            {
+                Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+            }
+        }
+    }
+
+
+    async Task LoadMenus()
+    {
+        listMenu = await Task.Run(() => menuService.SelectActive());
+    }
+
+    async Task LoadRole()
+    {
+        listRole = await Task.Run(() => roleService.SelectActive());
+    }
+
+    private void Reset()
+    {
+        objUserMenu = new UserMenu { RoleId = 0, MenuIds = string.Empty };
+    }
+}

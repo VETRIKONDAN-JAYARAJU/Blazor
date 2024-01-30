@@ -1,0 +1,135 @@
+﻿@page "/editmerchantbind/{MerchantBindId:int}/{BankId:int}";
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject MerchantBindService merchantBindService;
+@inject MerchantService merchantService;
+@inject BankService bankService;
+@inject BankAccountService bankAccountService;
+@inject RecordStatusService recordStatusService;
+
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+
+<RadzenContent class="remove-content">
+    <ChildContent>
+        <RadzenTemplateForm TItem="MerchantBind" Data="@objMerchantBind" Submit=@OnFormSubmit>
+            <div class="row">
+                <div class="form-group">
+                    <RadzenLabel Text="Merchant / Agent *" />
+                    <RadzenDropDown Name="MerchantName" Data=@listMerchant Placeholder="-- Choose --" TextProperty="MerchantName" ValueProperty="MerchantId" @bind-Value="@((objMerchantBind.MerchantId))" class="form-control" />
+                    <RadzenRequiredValidator Component="MerchantName" Text="Select Merchant / Agent" DefaultValue="0" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Bank *" />
+                    <RadzenDropDown Name="BankName" Data=@listBank Placeholder="-- Choose --" TextProperty="BankName" ValueProperty="BankId" @bind-Value="@((objMerchantBind.BankId))" class="form-control" Change="@BankOnChange" />
+                    <RadzenRequiredValidator Component="BankName" Text="Select Bank" DefaultValue="0" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Account No *" />
+                    <RadzenDropDown Name="AccountNo" Data=@listBankAccount Placeholder="-- Choose --" TextProperty="AccountNo" ValueProperty="BankAccountId" @bind-Value="@((objMerchantBind.BankAccountId))" class="form-control" />
+                    <RadzenRequiredValidator Component="AccountNo" Text="Select Account No" DefaultValue="0" />
+                </div>
+
+                <div class="form-group">
+                    <RadzenLabel Text="Status" />
+                    <RadzenDropDown Name="Status" Data="@listRecordStatus" TextProperty="Status" ValueProperty="StatusId" @bind-Value="@((objMerchantBind.StatusId))" class="form-control" />
+                    <RadzenRequiredValidator Component="Status" Text="Select Status" DefaultValue="0" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col offset-sm-3 mt-3">
+                    <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Save" Icon="save" />
+                    <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Light" Text="Cancel" Icon="cancel" Click="@CancelButtonClick" class="ms-2" />
+                </div>
+            </div>
+        </RadzenTemplateForm>
+    </ChildContent>
+</RadzenContent>
+
+@code {
+    [Parameter]
+    public int MerchantBindId { get; set; }
+    [Parameter]
+    public int BankId { get; set; }
+    MerchantBind objMerchantBind = new();
+
+    IEnumerable<Merchant>? listMerchant;
+    IEnumerable<Bank>? listBank;
+    IEnumerable<BankAccount>? listBankAccount;
+    IEnumerable<RecordStatus>? listRecordStatus;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMerchant();
+        await LoadBank();
+        await LoadBankAccountNo();
+        await LoadStatus();
+        objMerchantBind = await merchantBindService.SelectById(MerchantBindId);
+
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objMerchantBind.UpdatedBy = userAccount.UserId;
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            var result = await merchantBindService.Update(objMerchantBind);
+            if (result == true)
+            {
+                Dialog.Close(true);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Updated Successfully");
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        await Task.Run(() => Dialog.Close());
+    }
+
+    async Task LoadMerchant()
+    {
+        listMerchant = await Task.Run(merchantService.SelectActive);
+    }
+
+    async Task LoadBank()
+    {
+        listBank = await Task.Run(bankService.SelectActive);
+    }
+
+    async Task LoadBankAccountNo()
+    {
+        listBankAccount = await Task.Run(() => bankAccountService.SelectBankAccountNo(BankId));
+    }
+
+    private void BankOnChange(object value)
+    {
+        objMerchantBind.BankAccountId = 0;
+        listBankAccount = bankAccountService.SelectBankAccountNo(Convert.ToInt32(value));
+    }
+
+    protected async Task LoadStatus()
+    {
+        listRecordStatus = await Task.Run(recordStatusService.SelectAll);
+    }
+}

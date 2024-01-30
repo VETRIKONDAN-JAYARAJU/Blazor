@@ -1,0 +1,50 @@
+﻿@using Microsoft.AspNetCore.Components.Web
+@namespace PaymentWeb.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en" data-layout="vertical" data-sidebar="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    @*<base href="~/" />*@
+    <base href="paymentapi" />
+      
+    <link rel="stylesheet" href="css/site.css" />
+    <link rel="stylesheet" href="css/style.min.css" />
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="assets/css/icons.min.css" />
+    <link rel="stylesheet" href="assets/css/app.min.css" />
+    <link rel="stylesheet" href="PaymentWeb.styles.css" />
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/default.css" />
+    <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
+</head>
+<body>
+
+    @RenderBody()
+
+ 
+    <div id="blazor-error-ui">
+        <environment include="Staging,Production">
+            An error has occurred. This application may no longer respond until reloaded.
+        </environment>
+        <environment include="Development">
+            An unhandled exception has occurred. See browser dev tools for details.
+        </environment>
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <!-- Layout config Js -->
+    <script src="_framework/blazor.server.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+    <script src="~/js/SaveAsFile.js"></script>
+
+    <!-- Javascript -->
+    <script src="assets/js/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/simplebar/simplebar.min.js"></script>
+    <script src="assets/js/node-waves/waves.min.js"></script>
+    <script src="assets/js/feather-icons/feather.min.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,247 @@
+﻿@page "/qrcode";
+
+<PageTitle>QRCode Information</PageTitle>
+
+@using System.Security.Claims;
+
+@inject UserService userService;
+
+@inject QRCodeService qrcodeService;
+@inject NotificationService Notification;
+@inject DialogService Dialog;
+@inject TooltipService tooltipService;
+
+@inject IWebHostEnvironment webHostEnvironment;
+
+@using System.ComponentModel.DataAnnotations;
+
+<div class="container-fluid">
+    <RadzenTemplateForm TItem="QRCode" Data="@objQRCode" Submit=@OnFormSubmit>
+        <DataAnnotationsValidator />
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Add - QRCode Information</h4>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="QR Code *" />
+                                    <RadzenTextBox Name="QRCodeName" @bind-Value=@objQRCode.QRCodeName MaxLength="50" oninput="this.value=this.value.toUpperCase()"  class="form-control" />
+                                    <RadzenRequiredValidator Component="QRCodeName" Text="QRCode is required" />
+                                    <RadzenLengthValidator Component="QRCodeName" Min="10" Text="QRCode should be at least 10 characters" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <RadzenLabel Text="Upload QR Code Image *" class="me-2" />
+                                    <RadzenIcon Icon="announcement" class="danger" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Style = "color:#000" }))" />
+                                    <InputFile id="FileName" @bind-Value=@objQRCode.FileName OnChange="@LoadFiles" title="Upload jpg or png image only" class=" bg-light w-75" />
+                                    <ValidationMessage For="@(() => objQRCode.FileName)" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div class="btn-vcenter">
+                                        <RadzenButton ButtonType="ButtonType.Submit" Text="Submit" Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </RadzenTemplateForm>
+
+    @* DataGrid Section Starts Here*@
+    @*------------------------------------------------------------------------------*@
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">View - QRCode Information</h4>
+                </div>
+
+                <div class="card-body">
+                    <RadzenDataGrid Data="@modelData" TItem="QRCode" PageSize="10" AllowPaging="true" ShowPagingSummary="true" AllowSorting="true" AllowFiltering="true" PagerHorizontalAlign="HorizontalAlign.Left"
+                                    ColumnWidth="100%" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="QRCode" Property="QRCodeId" Title="QRCODE ID" Width="10%" Frozen="true" Filterable="false" Visible="false" />
+                            <RadzenDataGridColumn TItem="QRCode" Property="QRCodeName" Title="QRCODE" Width="40%" />
+                            <RadzenDataGridColumn TItem="QRCode" Property="FilePath" Title="QRCODE IMAGE" Sortable="false" Filterable="false" TextAlign="TextAlign.Center" Width="30%">
+                                <Template Context="data">
+                                    <RadzenImage Path="@data.FilePath" class="rounded img-thumbnail" style="height:50px; width:50px;" />
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn TItem="QRCode" Property="Status" Title="STATUS" Width="30%" Filterable="false">
+                                <Template Context="data">
+                                    @if (@data.Status == "Active")
+                                    {
+                                        <span class="actives">@data.Status</span>
+                                    }
+                                    else if (@data.Status == "In Active")
+                                    {
+                                        <span class="inactive">@data.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="deleted">@data.Status</span>
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn TItem="QRCode" Filterable="false" Sortable="false" Width="20%" Title="ACTION" TextAlign="TextAlign.Center">
+                                <Template Context="actionRecord">
+                                    <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Click="@((args) =>GridEditButtonClick(args, actionRecord))" @onclick:stopPropagation="true" title="Edit" />
+                                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@((args) =>GridDeleteButtonClick(args, actionRecord))" @onclick:stopPropagation="true" title="Delete" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    QRCode objQRCode = new();
+    IEnumerable<QRCode>? modelData;
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthState!).User;
+        var userEmail = user.Claims.Where(c => c.Type == ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
+        var userAccount = userService.GetbyUsername(userEmail);
+        objQRCode.CreatedBy = userAccount.UserId;
+        
+        await LoadDataGrid();
+    }
+
+    protected async Task OnFormSubmit()
+    {
+        try
+        {
+            if (objQRCode.FileName != null)
+            {
+                var result = await qrcodeService.Insert(objQRCode);
+                if (result == true)
+                {
+                    await LoadDataGrid();
+                    Reset();
+                    Notification.Notify(NotificationSeverity.Success, summary: "Record Inserted Successfully");
+                }
+                else
+                {
+                    Notification.Notify(NotificationSeverity.Warning, summary: "This Record Already Exists");
+                }
+            }
+            else
+            {
+                Notification.Notify(NotificationSeverity.Error, summary: "Please Upload QRCode Image");
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task GridEditButtonClick(MouseEventArgs args, dynamic data)
+    {
+        var dialogResult = await Dialog.OpenAsync<EditQRCode>("Edit - QRCode Information", new Dictionary<string, object>() { { "QRCodeId", data.QRCodeId } });
+        if (Convert.ToBoolean(dialogResult) == true)
+        {
+            await LoadDataGrid();
+        }
+    }
+
+    protected async Task GridDeleteButtonClick(MouseEventArgs args, dynamic data)
+    {
+        try
+        {
+            if (await Dialog.Confirm("Are you sure you want to delete this record?", "Confirm", new ConfirmOptions() { OkButtonText = "Yes, Delete", CancelButtonText = "No, Cancel" }) == true)
+            {
+                var result = await qrcodeService.Delete(data.QRCodeId);
+                Notification.Notify(NotificationSeverity.Success, summary: "Record Deleted Successfully");
+                await LoadDataGrid();
+            }
+        }
+        catch (Exception ex)
+        {
+            Notification.Notify(NotificationSeverity.Error, summary: ex.Message);
+        }
+    }
+
+    protected async Task LoadDataGrid()
+    {
+        modelData = await Task.Run(qrcodeService.SelectAll);
+        StateHasChanged();
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs eventArgs)
+    {
+        try
+        {
+            foreach (var file in eventArgs.GetMultipleFiles())
+            {
+                var fileName = eventArgs.File.Name;
+                var fileSize = eventArgs.File.Size;
+                var fileExtension = Path.GetExtension(fileName);
+
+                if (fileSize > 1048576)
+                {
+                    Reset();
+                    Notification.Notify(NotificationSeverity.Error, summary: "Your image should be below 1MB");
+                }
+                else if (fileExtension.Contains("png") || fileExtension.Contains("jpg"))
+                {
+                    var newFileName = $"{Guid.NewGuid().ToString()}{fileExtension}";
+                    var folderDirectory = $"{webHostEnvironment.WebRootPath}\\qrcodeimages";
+
+                    if (!Directory.Exists(folderDirectory))
+                    {
+                        Directory.CreateDirectory(folderDirectory);
+                    }
+
+                    var filePath = Path.Combine(folderDirectory, newFileName);
+                    using FileStream fs = new FileStream(filePath, FileMode.Create);
+                    await file.OpenReadStream().CopyToAsync(fs);
+                    fs.Dispose();
+
+                    objQRCode.FileName = newFileName;
+                    objQRCode.FilePath = $"qrcodeimages/{newFileName}";
+                }
+                else
+                {
+                    Reset();
+                    Notification.Notify(NotificationSeverity.Error, summary: "Image format (png/jpg) only allowed");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+    }
+
+    private void ShowTooltip(ElementReference elementReference, TooltipOptions options)
+    {
+        tooltipService.Open(elementReference, "Your image should be (jpg,png) format and file size below 1mb", options);
+    }
+
+    private void Reset()
+    {
+        objQRCode = new QRCode { QRCodeName = string.Empty, FileName = string.Empty, FilePath = string.Empty };
+    }
+}

@@ -1,0 +1,24 @@
+﻿@page "/merchantbalance/{MerchantId:int}";
+
+@inject MerchantService merchantService;
+@inject DialogService Dialog;
+
+<RadzenDataGrid Data="@modelData" TItem="MerchantBalances" PagerHorizontalAlign="HorizontalAlign.Left" ColumnWidth="100%">
+    <Columns>
+        <RadzenDataGridColumn TItem="MerchantBalances" Property="MerchantBalanceId" Title="ID" Width="10%" Frozen="true" Filterable="false" Visible="false" />
+        <RadzenDataGridColumn TItem="MerchantBalances" Property="CurrencyCode" Title="CURRENCY CODE" />
+        <RadzenDataGridColumn TItem="MerchantBalances" Property="BalanceAmount" Title="BALANCE AMOUNT" />
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    [Parameter]
+    public int MerchantId { get; set; }
+
+    IEnumerable<MerchantBalances>? modelData;
+
+    protected override async Task OnInitializedAsync()
+    {
+         modelData = await merchantService.SelectMerchantBalance(MerchantId);
+    }
+}

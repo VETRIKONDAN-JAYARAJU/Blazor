@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "dgSpecHash": "1TKqBliwgzagh6SB6y128f31nEGyzKcwP8VUido9ctSWjZ3kHmlqnLpepLendxcBHgciciJT6Majc/YZlwdVEA==",
+  "success": true,
+  "projectFilePath": "D:\\1DPayment\\DataServices\\DataServices.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\hp\\.nuget\\packages\\dapper\\2.0.123\\dapper.2.0.123.nupkg.sha512",
+    "C:\\Users\\hp\\.nuget\\packages\\microsoft.extensions.configuration\\6.0.1\\microsoft.extensions.configuration.6.0.1.nupkg.sha512",
+    "C:\\Users\\hp\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\6.0.0\\microsoft.extensions.configuration.abstractions.6.0.0.nupkg.sha512",
+    "C:\\Users\\hp\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\6.0.0\\microsoft.extensions.dependencyinjection.abstractions.6.0.0.nupkg.sha512",
+    "C:\\Users\\hp\\.nuget\\packages\\microsoft.extensions.options\\6.0.0\\microsoft.extensions.options.6.0.0.nupkg.sha512",
+    "C:\\Users\\hp\\.nuget\\packages\\microsoft.extensions.primitives\\6.0.0\\microsoft.extensions.primitives.6.0.0.nupkg.sha512",
+    "C:\\Users\\hp\\.nuget\\packages\\mysqlconnector\\2.1.12\\mysqlconnector.2.1.12.nupkg.sha512",
+    "C:\\Users\\hp\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
